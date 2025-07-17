@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StandBy Mode PWA</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Theme color for browser UI -->
+    <meta name="theme-color" content="#000000">
+
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Hide scrollbars */
+        html, body {
+            overflow: hidden;
+        }
+        /* Smooth transition between views */
+        .view {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .hidden-view {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .visible-view {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-black text-white h-screen w-screen flex items-center justify-center select-none">
+
+    <!-- Main Application Container -->
+    <div id="app" class="h-full w-full relative">
+
+        <!-- Portrait View: Instructions for the user -->
+        <div id="portrait-view" class="view visible-view absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+            <svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+            </svg>
+            <h1 class="text-2xl font-bold mb-2">โหมด StandBy</h1>
+            <p class="text-gray-400">กรุณาหมุนอุปกรณ์ของคุณเป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ</p>
+        </div>
+
+        <!-- StandBy View (Landscape): The main clock display -->
+        <div id="standby-view" class="view hidden-view absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8">
+            <div class="text-center">
+                <!-- Digital Clock -->
+                <div id="time" class="font-black text-red-500" style="font-size: clamp(4rem, 25vw, 15rem); line-height: 1;">
+                    00:00
+                </div>
+                <!-- Date Display -->
+                <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, 5vw, 2.5rem);">
+                    วันที่
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- The JavaScript that powers the application -->
+    <script>
+        // DOM Element References
+        const portraitView = document.getElementById('portrait-view');
+        const standbyView = document.getElementById('standby-view');
+        const timeEl = document.getElementById('time');
+        const dateEl = document.getElementById('date');
+
+        // State variables
+        let wakeLock = null;
+        let clockInterval = null;
+
+        // --- Wake Lock API Functions ---
+        // Function to request a screen wake lock (prevents screen from turning off)
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active.');
+                    // Add a listener for when the wake lock is released
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released.');
+                    });
+                } catch (err) {
+                    console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+                }
+            } else {
+                console.log('Wake Lock API is not supported by this browser.');
+            }
+        };
+
+        // Function to release the screen wake lock
+        const releaseWakeLock = async () => {
+            if (wakeLock !== null) {
+                await wakeLock.release();
+                wakeLock = null;
+                console.log('Wake Lock released.');
+            }
+        };
+
+        // --- Clock and Date Functions ---
+        // Function to update the time and date display
+        const updateClock = () => {
+            const now = new Date();
+            
+            // Format time (e.g., 09:05)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            timeEl.textContent = `${hours}:${minutes}`;
+
+            // Format date in Thai
+            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+            dateEl.textContent = now.toLocaleDateString('th-TH', dateOptions);
+        };
+
+        // --- Core Logic ---
+        // Function to handle the switch between portrait and landscape modes
+        const handleOrientationChange = () => {
+            // Check if the current orientation is landscape
+            const isLandscape = screen.orientation.type.includes('landscape');
+
+            if (isLandscape) {
+                // --- Enter StandBy Mode ---
+                portraitView.classList.remove('visible-view');
+                portraitView.classList.add('hidden-view');
+                standbyView.classList.remove('hidden-view');
+                standbyView.classList.add('visible-view');
+
+                requestWakeLock(); // Request to keep the screen on
+                
+                // Start updating the clock every second
+                updateClock(); // Update immediately
+                if (clockInterval) clearInterval(clockInterval); // Clear any existing interval
+                clockInterval = setInterval(updateClock, 1000);
+
+            } else {
+                // --- Exit StandBy Mode ---
+                standbyView.classList.remove('visible-view');
+                standbyView.classList.add('hidden-view');
+                portraitView.classList.remove('hidden-view');
+                portraitView.classList.add('visible-view');
+
+                releaseWakeLock(); // Allow the screen to turn off again
+                
+                // Stop updating the clock to save battery
+                if (clockInterval) {
+                    clearInterval(clockInterval);
+                    clockInterval = null;
+                }
+            }
+        };
+
+        // --- Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // --- Event Listeners and Initialisation ---
+        // Listen for changes in screen orientation
+        screen.orientation.addEventListener('change', handleOrientationChange);
+
+        // Run the check once when the page loads to set the initial state
+        window.addEventListener('load', handleOrientationChange);
+    </script>
+</body>
+</html>
