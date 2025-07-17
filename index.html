@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>StandBy Mode PWA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,23 +13,18 @@
     <meta name="theme-color" content="#000000">
 
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; touch-action: manipulation; }
         html, body { overflow: hidden; }
-        .view, #settings-modal { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; }
+        .view, .modal { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
         .hidden-view { opacity: 0; pointer-events: none; transform: scale(0.95); }
         .visible-view { opacity: 1; transform: scale(1); }
         #photo-widget { background-size: cover; background-position: center; transition: background-image 1s ease-in-out, opacity 0.5s; }
         /* Custom file input button */
         input[type="file"] { display: none; }
-        .custom-file-upload {
-            border: 1px solid #4a5568;
-            display: inline-block;
-            padding: 6px 12px;
-            cursor: pointer;
-            background-color: #2d3748;
-            border-radius: 0.5rem;
-            text-align: center;
-        }
+        .custom-file-upload { border: 1px solid #4a5568; display: inline-block; padding: 6px 12px; cursor: pointer; background-color: #2d3748; border-radius: 0.5rem; text-align: center; }
+        /* Opacity Slider Thumb */
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
+        input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
     </style>
 </head>
 <body class="bg-black text-white h-screen w-screen flex items-center justify-center select-none">
@@ -49,10 +44,11 @@
 
         <!-- StandBy View (Landscape) -->
         <div id="standby-view" class="view hidden-view absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 sm:p-8">
-            <div id="clock-container" class="flex items-center justify-center transition-opacity duration-500">
+            <div id="clock-container" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
                 <div class="text-center">
-                    <div id="time" class="font-black text-red-500" style="font-size: clamp(4rem, 20vw, 12rem); line-height: 1;">00:00</div>
+                    <div id="time" class="font-black text-red-500" style="font-size: clamp(4rem, 20vw, 12rem); line-height: 1;">00:00:00</div>
                     <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, 4vw, 2rem);">วันที่</div>
+                    <div id="secondary-clock" class="font-semibold text-gray-300 mt-3" style="font-size: clamp(1rem, 4vw, 2rem);"></div>
                 </div>
             </div>
             <div class="flex flex-col gap-4">
@@ -61,8 +57,13 @@
             </div>
         </div>
 
+        <!-- Opacity Slider Modal -->
+        <div id="opacity-modal" class="modal hidden-view absolute inset-0 bg-black/50 flex items-center justify-center p-8">
+            <input type="range" id="live-opacity-slider" min="0.2" max="1" step="0.05" class="w-full max-w-md h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+        </div>
+
         <!-- Settings Modal -->
-        <div id="settings-modal" class="hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="settings-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md max-h-full overflow-y-auto">
                 <h2 class="text-xl font-bold mb-6">ตั้งค่าการแสดงผล</h2>
                 <div class="space-y-6">
@@ -78,9 +79,9 @@
                     <div>
                         <h3 class="font-bold mb-2">นาฬิกา</h3>
                         <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
-                            <label class="block"><span class="text-gray-300">โซนเวลา</span><select id="timezone-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
+                            <label class="block"><span class="text-gray-300">โซนเวลาหลัก</span><select id="timezone-select-1" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
+                            <label class="block"><span class="text-gray-300">โซนเวลาที่สอง</span><select id="timezone-select-2" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
                             <label class="block"><span class="text-gray-300">รูปแบบปี</span><select id="year-format-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"><option value="buddhist">พ.ศ.</option><option value="gregory">ค.ศ.</option></select></label>
-                            <label class="block"><span class="text-gray-300">ความโปร่งแสง</span><input type="range" id="opacity-slider" min="0.2" max="1" step="0.1" class="mt-1 w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"></label>
                         </div>
                     </div>
                     <!-- Background Settings -->
@@ -107,24 +108,27 @@
     <script>
         // --- DOM Elements & State Initialization ---
         const elements = {
-            portraitView: document.getElementById('portrait-view'),
-            standbyView: document.getElementById('standby-view'),
             clockContainer: document.getElementById('clock-container'),
             time: document.getElementById('time'),
             date: document.getElementById('date'),
+            secondaryClock: document.getElementById('secondary-clock'),
+            portraitView: document.getElementById('portrait-view'),
+            standbyView: document.getElementById('standby-view'),
             portraitIcon: document.getElementById('portrait-icon'),
             portraitTitle: document.getElementById('portrait-title'),
             portraitText: document.getElementById('portrait-text'),
             settingsBtn: document.getElementById('settings-btn'),
             settingsModal: document.getElementById('settings-modal'),
             closeSettingsBtn: document.getElementById('close-settings-btn'),
+            opacityModal: document.getElementById('opacity-modal'),
+            liveOpacitySlider: document.getElementById('live-opacity-slider'),
             weatherToggle: document.getElementById('weather-toggle'),
             photoToggle: document.getElementById('photo-toggle'),
             weatherWidget: document.getElementById('weather-widget'),
             photoWidget: document.getElementById('photo-widget'),
-            timezoneSelect: document.getElementById('timezone-select'),
+            timezoneSelect1: document.getElementById('timezone-select-1'),
+            timezoneSelect2: document.getElementById('timezone-select-2'),
             yearFormatSelect: document.getElementById('year-format-select'),
-            opacitySlider: document.getElementById('opacity-slider'),
             bgModeSelect: document.getElementById('bg-mode-select'),
             customBgUploadContainer: document.getElementById('custom-bg-upload-container'),
             bgFileInput: document.getElementById('bg-file-input'),
@@ -136,13 +140,15 @@
             clockInterval: null,
             photoInterval: null,
             isCharging: false,
+            longPressTimer: null,
             settings: {
                 showWeather: false,
                 showPhotos: false,
-                timeZone: 'Asia/Bangkok',
-                yearFormat: 'buddhist', // 'buddhist' or 'gregory'
+                timeZone1: 'Asia/Bangkok',
+                timeZone2: 'Europe/London',
+                yearFormat: 'buddhist',
                 clockOpacity: 1.0,
-                backgroundMode: 'random', // 'random' or 'custom'
+                backgroundMode: 'random',
                 customBgUrl: null,
             }
         };
@@ -151,43 +157,38 @@
             landscape: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>`,
             charging: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>`
         };
+        
+        const timezoneToCountryCode = {
+            'Asia/Bangkok': 'TH', 'Europe/London': 'GB', 'Asia/Tokyo': 'JP', 'America/New_York': 'US', 'Australia/Sydney': 'AU', 'Europe/Paris': 'FR', 'Asia/Dubai': 'AE', 'Asia/Hong_Kong': 'HK', 'America/Los_Angeles': 'US', 'UTC': 'UN'
+        };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v2', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v3', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v2');
+            const saved = localStorage.getItem('standbySettings_v3');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
-            // Apply loaded settings to the UI
             elements.weatherToggle.checked = state.settings.showWeather;
             elements.photoToggle.checked = state.settings.showPhotos;
-            elements.timezoneSelect.value = state.settings.timeZone;
+            elements.timezoneSelect1.value = state.settings.timeZone1;
+            elements.timezoneSelect2.value = state.settings.timeZone2;
             elements.yearFormatSelect.value = state.settings.yearFormat;
-            elements.opacitySlider.value = state.settings.clockOpacity;
             elements.bgModeSelect.value = state.settings.backgroundMode;
             elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีภาพที่อัปโหลดไว้แล้ว" : "";
         };
 
         // --- UI Application Functions ---
-        const applyClockOpacity = () => {
-            elements.clockContainer.style.opacity = state.settings.clockOpacity;
-        };
-
-        const applyBackgroundMode = () => {
-            if (state.settings.backgroundMode === 'custom') {
-                elements.customBgUploadContainer.style.display = 'block';
-            } else {
-                elements.customBgUploadContainer.style.display = 'none';
-            }
-        };
+        const applyClockOpacity = () => elements.clockContainer.style.opacity = state.settings.clockOpacity;
+        const applyBackgroundMode = () => elements.customBgUploadContainer.style.display = state.settings.backgroundMode === 'custom' ? 'block' : 'none';
 
         // --- Wake Lock ---
         const requestWakeLock = async () => {
             if ('wakeLock' in navigator) {
                 try {
                     state.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active.');
                 } catch (err) { console.error('Wake Lock failed:', err); }
             }
         };
@@ -195,16 +196,31 @@
             if (state.wakeLock) {
                 await state.wakeLock.release();
                 state.wakeLock = null;
+                console.log('Wake Lock released.');
             }
         };
 
         // --- Widgets & Clock ---
+        function getFlagEmoji(countryCode) {
+            if (!countryCode) return '🏳️';
+            const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
+        }
+
         const updateClock = () => {
             const now = new Date();
-            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: state.settings.timeZone };
-            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: state.settings.timeZone, calendar: state.settings.yearFormat };
-            elements.time.textContent = now.toLocaleTimeString('th-TH', timeOptions);
-            elements.date.textContent = now.toLocaleDateString('th-TH', dateOptions);
+            // Main Clock
+            const mainTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone1 };
+            const mainDateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: state.settings.timeZone1, calendar: state.settings.yearFormat };
+            elements.time.textContent = now.toLocaleTimeString('en-US', mainTimeOptions);
+            elements.date.textContent = now.toLocaleDateString('th-TH', mainDateOptions);
+            
+            // Secondary Clock
+            const secondaryTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone2 };
+            const secondaryTimeString = now.toLocaleTimeString('en-US', secondaryTimeOptions);
+            const countryCode = timezoneToCountryCode[state.settings.timeZone2];
+            const flag = getFlagEmoji(countryCode);
+            elements.secondaryClock.innerHTML = `<span>${flag}</span> ${secondaryTimeString}`;
         };
 
         const updateBackgroundImage = () => {
@@ -215,16 +231,42 @@
                 elements.photoWidget.style.backgroundImage = `url(https://source.unsplash.com/random/800x600?${query}&t=${new Date().getTime()})`;
             }
         };
-
         const startPhotoSlideshow = () => {
             if (state.photoInterval) clearInterval(state.photoInterval);
             updateBackgroundImage();
             state.photoInterval = setInterval(updateBackgroundImage, 20000);
         };
         const stopPhotoSlideshow = () => {
-            if (state.photoInterval) clearInterval(state.photoInterval);
+            if (state.photoInterval) {
+                clearInterval(state.photoInterval);
+                state.photoInterval = null;
+            }
         };
-        
+        const getWeatherDescription = (code) => {
+            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 48: "มีหมอกหนา", 51: "ฝนตกปรอยๆ", 53: "ฝนตกปรอยๆ", 55: "ฝนตกปรอยๆ", 61: "ฝนตกเล็กน้อย", 63: "ฝนตกปานกลาง", 65: "ฝนตกหนัก", 80: "ฝนโปรย", 81: "ฝนโปรย", 82: "ฝนโปรย", 95: "พายุฝนฟ้าคะนอง"};
+            return descriptions[code] || "ไม่ทราบสภาพอากาศ";
+        };
+        const fetchWeather = () => {
+            elements.weatherWidget.innerHTML = `<p>กำลังโหลด...</p>`;
+            navigator.geolocation.getCurrentPosition(async position => {
+                const { latitude, longitude } = position.coords;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    elements.weatherWidget.innerHTML = `
+                        <div class="text-center">
+                           <p class="text-5xl font-bold">${Math.round(data.current_weather.temperature)}°C</p>
+                           <p class="mt-2">${getWeatherDescription(data.current_weather.weathercode)}</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    elements.weatherWidget.innerHTML = `<p>ไม่สามารถโหลดข้อมูลได้</p>`;
+                }
+            }, () => {
+                elements.weatherWidget.innerHTML = `<p>กรุณาอนุญาตให้เข้าถึงตำแหน่ง</p>`;
+            });
+        };
         const updateWidgetVisibility = () => {
             elements.weatherWidget.style.display = state.settings.showWeather ? 'flex' : 'none';
             if (state.settings.showWeather) fetchWeather();
@@ -242,32 +284,52 @@
                 requestWakeLock();
                 updateClock();
                 if (state.clockInterval) clearInterval(state.clockInterval);
-                state.clockInterval = setInterval(updateClock, 15000); // Update more frequently for timezone changes
+                state.clockInterval = setInterval(updateClock, 1000); // Update every second
                 updateWidgetVisibility();
                 applyClockOpacity();
             } else {
                 elements.standbyView.classList.replace('visible-view', 'hidden-view');
                 elements.portraitView.classList.replace('hidden-view', 'visible-view');
                 releaseWakeLock();
-                if (state.clockInterval) clearInterval(state.clockInterval);
+                if (state.clockInterval) {
+                    clearInterval(state.clockInterval);
+                    state.clockInterval = null;
+                }
                 stopPhotoSlideshow();
                 updatePortraitMessage();
+            }
+        };
+        
+        const updatePortraitMessage = () => {
+            if (state.isCharging) {
+                elements.portraitIcon.innerHTML = icons.landscape;
+                elements.portraitTitle.textContent = "พร้อมทำงาน";
+                elements.portraitText.innerHTML = "กรุณาหมุนอุปกรณ์เป็นแนวนอน";
+            } else {
+                elements.portraitIcon.innerHTML = icons.charging;
+                elements.portraitTitle.textContent = "กรุณาเสียบสายชาร์จ";
+                elements.portraitText.innerHTML = "โหมด StandBy จะทำงานเมื่อ<br>อุปกรณ์ของคุณกำลังชาร์จไฟ";
             }
         };
 
         // --- Populate Timezone Select ---
         const populateTimezones = () => {
-            const timezones = ['Asia/Bangkok', 'Europe/London', 'Asia/Tokyo', 'America/New_York', 'Australia/Sydney', 'UTC'];
-            timezones.forEach(tz => {
-                const option = document.createElement('option');
-                option.value = tz;
-                option.textContent = tz;
-                elements.timezoneSelect.appendChild(option);
+            const timezones = Object.keys(timezoneToCountryCode);
+            [elements.timezoneSelect1, elements.timezoneSelect2].forEach(select => {
+                // Clear existing options
+                select.innerHTML = '';
+                timezones.forEach(tz => {
+                    const option = document.createElement('option');
+                    option.value = tz;
+                    option.textContent = tz;
+                    select.appendChild(option);
+                });
             });
         };
 
         // --- Event Listeners Setup ---
         const setupEventListeners = () => {
+            // Settings Modal
             elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.replace('hidden-view', 'visible-view'));
             elements.closeSettingsBtn.addEventListener('click', () => {
                 elements.settingsModal.classList.replace('visible-view', 'hidden-view');
@@ -275,18 +337,40 @@
                 handleStateChange();
             });
             
-            elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
-            elements.photoToggle.addEventListener('change', e => state.settings.showPhotos = e.target.checked);
-            elements.timezoneSelect.addEventListener('change', e => state.settings.timeZone = e.target.value);
-            elements.yearFormatSelect.addEventListener('change', e => state.settings.yearFormat = e.target.value);
-            elements.opacitySlider.addEventListener('input', e => {
+            // Opacity Long Press
+            const startPress = (e) => {
+                e.preventDefault();
+                state.longPressTimer = setTimeout(() => {
+                    elements.opacityModal.classList.replace('hidden-view', 'visible-view');
+                    elements.liveOpacitySlider.value = state.settings.clockOpacity;
+                }, 500); // 500ms for long press
+            };
+            const cancelPress = () => clearTimeout(state.longPressTimer);
+            elements.clockContainer.addEventListener('mousedown', startPress);
+            elements.clockContainer.addEventListener('touchstart', startPress, { passive: false });
+            elements.clockContainer.addEventListener('mouseup', cancelPress);
+            elements.clockContainer.addEventListener('mouseleave', cancelPress);
+            elements.clockContainer.addEventListener('touchend', cancelPress);
+
+            // Opacity Modal Listeners
+            elements.liveOpacitySlider.addEventListener('input', e => {
                 state.settings.clockOpacity = e.target.value;
                 applyClockOpacity();
             });
-            elements.bgModeSelect.addEventListener('change', e => {
-                state.settings.backgroundMode = e.target.value;
-                applyBackgroundMode();
+            elements.opacityModal.addEventListener('click', (e) => {
+                if (e.target === elements.opacityModal) {
+                    elements.opacityModal.classList.replace('visible-view', 'hidden-view');
+                    saveSettings();
+                }
             });
+            
+            // Settings Listeners
+            elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
+            elements.photoToggle.addEventListener('change', e => state.settings.showPhotos = e.target.checked);
+            elements.timezoneSelect1.addEventListener('change', e => state.settings.timeZone1 = e.target.value);
+            elements.timezoneSelect2.addEventListener('change', e => state.settings.timeZone2 = e.target.value);
+            elements.yearFormatSelect.addEventListener('change', e => state.settings.yearFormat = e.target.value);
+            elements.bgModeSelect.addEventListener('change', e => { state.settings.backgroundMode = e.target.value; applyBackgroundMode(); });
             elements.bgFileInput.addEventListener('change', e => {
                 const file = e.target.files[0];
                 if (file) {
@@ -315,46 +399,8 @@
                     handleStateChange();
                 });
             } else {
-                state.isCharging = true;
+                state.isCharging = true; // Fallback for unsupported browsers
                 handleStateChange();
-            }
-        };
-
-        const getWeatherDescription = (code) => {
-            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 48: "มีหมอกหนา", 51: "ฝนตกปรอยๆ", 53: "ฝนตกปรอยๆ", 55: "ฝนตกปรอยๆ", 61: "ฝนตกเล็กน้อย", 63: "ฝนตกปานกลาง", 65: "ฝนตกหนัก", 80: "ฝนโปรย", 81: "ฝนโปรย", 82: "ฝนโปรย", 95: "พายุฝนฟ้าคะนอง"};
-            return descriptions[code] || "ไม่ทราบสภาพอากาศ";
-        };
-        const fetchWeather = () => {
-            elements.weatherWidget.innerHTML = `<p>กำลังโหลดสภาพอากาศ...</p>`;
-            navigator.geolocation.getCurrentPosition(async position => {
-                const { latitude, longitude } = position.coords;
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    const { temperature, weathercode } = data.current_weather;
-                    elements.weatherWidget.innerHTML = `
-                        <div class="text-center">
-                           <p class="text-5xl font-bold">${Math.round(temperature)}°C</p>
-                           <p class="mt-2">${getWeatherDescription(weathercode)}</p>
-                        </div>
-                    `;
-                } catch (error) {
-                    elements.weatherWidget.innerHTML = `<p>ไม่สามารถโหลดข้อมูลได้</p>`;
-                }
-            }, () => {
-                elements.weatherWidget.innerHTML = `<p>กรุณาอนุญาตให้เข้าถึงตำแหน่ง</p>`;
-            });
-        };
-        const updatePortraitMessage = () => {
-            if (state.isCharging) {
-                elements.portraitIcon.innerHTML = icons.landscape;
-                elements.portraitTitle.textContent = "โหมด StandBy พร้อมทำงาน";
-                elements.portraitText.innerHTML = "กรุณาหมุนอุปกรณ์เป็นแนวนอน";
-            } else {
-                elements.portraitIcon.innerHTML = icons.charging;
-                elements.portraitTitle.textContent = "กรุณาเสียบสายชาร์จ";
-                elements.portraitText.innerHTML = "โหมด StandBy จะทำงานเมื่อ<br>อุปกรณ์ของคุณกำลังชาร์จไฟ";
             }
         };
         
@@ -369,7 +415,6 @@
                 navigator.serviceWorker.register('service-worker.js');
             }
         });
-
     </script>
 </body>
 </html>
