@@ -5,190 +5,371 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StandBy Mode PWA</title>
     
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
-    <!-- Web App Manifest -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Theme color for browser UI -->
     <meta name="theme-color" content="#000000">
 
     <style>
-        /* Custom styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        html, body {
-            overflow: hidden;
-        }
-        .view {
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-        }
-        .hidden-view {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.95);
-        }
-        .visible-view {
-            opacity: 1;
-            transform: scale(1);
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        html, body { overflow: hidden; }
+        .view, #settings-modal { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; }
+        .hidden-view { opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .visible-view { opacity: 1; transform: scale(1); }
+        #photo-widget { background-size: cover; background-position: center; transition: background-image 1s ease-in-out, opacity 0.5s; }
+        /* Custom file input button */
+        input[type="file"] { display: none; }
+        .custom-file-upload {
+            border: 1px solid #4a5568;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            text-align: center;
         }
     </style>
 </head>
 <body class="bg-black text-white h-screen w-screen flex items-center justify-center select-none">
 
-    <!-- Main Application Container -->
+    <!-- Main Container -->
     <div id="app" class="h-full w-full relative">
 
-        <!-- Portrait View: Instructions for the user -->
+        <!-- Portrait View -->
         <div id="portrait-view" class="view visible-view absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-            <div id="portrait-icon">
-                <!-- Icon will be injected by JS -->
-            </div>
+            <div id="portrait-icon"></div>
             <h1 id="portrait-title" class="text-2xl font-bold mb-2">โหมด StandBy</h1>
             <p id="portrait-text" class="text-gray-400">กรุณาหมุนอุปกรณ์เป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ</p>
+            <button id="settings-btn" class="absolute top-5 right-5 p-2 text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+            </button>
         </div>
 
-        <!-- StandBy View (Landscape): The main clock display -->
-        <div id="standby-view" class="view hidden-view absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-8">
-            <div class="text-center">
-                <div id="time" class="font-black text-red-500" style="font-size: clamp(4rem, 25vw, 15rem); line-height: 1;">00:00</div>
-                <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, 5vw, 2.5rem);">วันที่</div>
+        <!-- StandBy View (Landscape) -->
+        <div id="standby-view" class="view hidden-view absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 sm:p-8">
+            <div id="clock-container" class="flex items-center justify-center transition-opacity duration-500">
+                <div class="text-center">
+                    <div id="time" class="font-black text-red-500" style="font-size: clamp(4rem, 20vw, 12rem); line-height: 1;">00:00</div>
+                    <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, 4vw, 2rem);">วันที่</div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-4">
+                <div id="weather-widget" class="hidden h-1/2 bg-white/10 rounded-2xl p-4 items-center justify-center text-center"></div>
+                <div id="photo-widget" class="hidden h-1/2 bg-white/10 rounded-2xl"></div>
             </div>
         </div>
 
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md max-h-full overflow-y-auto">
+                <h2 class="text-xl font-bold mb-6">ตั้งค่าการแสดงผล</h2>
+                <div class="space-y-6">
+                    <!-- Widget Settings -->
+                    <div>
+                        <h3 class="font-bold mb-2">วิดเจ็ต</h3>
+                        <div class="space-y-2 p-4 bg-gray-800 rounded-lg">
+                            <label class="flex items-center justify-between"><span class="text-gray-300">พยากรณ์อากาศ</span><input type="checkbox" id="weather-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
+                            <label class="flex items-center justify-between"><span class="text-gray-300">สไลด์โชว์รูปภาพ</span><input type="checkbox" id="photo-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
+                        </div>
+                    </div>
+                    <!-- Clock Settings -->
+                    <div>
+                        <h3 class="font-bold mb-2">นาฬิกา</h3>
+                        <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                            <label class="block"><span class="text-gray-300">โซนเวลา</span><select id="timezone-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
+                            <label class="block"><span class="text-gray-300">รูปแบบปี</span><select id="year-format-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"><option value="buddhist">พ.ศ.</option><option value="gregory">ค.ศ.</option></select></label>
+                            <label class="block"><span class="text-gray-300">ความโปร่งแสง</span><input type="range" id="opacity-slider" min="0.2" max="1" step="0.1" class="mt-1 w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <!-- Background Settings -->
+                    <div>
+                        <h3 class="font-bold mb-2">พื้นหลัง (ในวิดเจ็ตภาพ)</h3>
+                        <div class="p-4 bg-gray-800 rounded-lg">
+                            <select id="bg-mode-select" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                                <option value="random">สุ่มภาพอัตโนมัติ</option>
+                                <option value="custom">อัปโหลดภาพเอง</option>
+                            </select>
+                            <div id="custom-bg-upload-container" class="hidden mt-4">
+                                <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพ</label>
+                                <input id="bg-file-input" type="file" accept="image/*">
+                                <p id="custom-bg-filename" class="text-xs text-gray-400 mt-2 truncate"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button id="close-settings-btn" class="mt-8 w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition">บันทึกและปิด</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // DOM Element References
-        const portraitView = document.getElementById('portrait-view');
-        const standbyView = document.getElementById('standby-view');
-        const timeEl = document.getElementById('time');
-        const dateEl = document.getElementById('date');
-        const portraitIcon = document.getElementById('portrait-icon');
-        const portraitTitle = document.getElementById('portrait-title');
-        const portraitText = document.getElementById('portrait-text');
+        // --- DOM Elements & State Initialization ---
+        const elements = {
+            portraitView: document.getElementById('portrait-view'),
+            standbyView: document.getElementById('standby-view'),
+            clockContainer: document.getElementById('clock-container'),
+            time: document.getElementById('time'),
+            date: document.getElementById('date'),
+            portraitIcon: document.getElementById('portrait-icon'),
+            portraitTitle: document.getElementById('portrait-title'),
+            portraitText: document.getElementById('portrait-text'),
+            settingsBtn: document.getElementById('settings-btn'),
+            settingsModal: document.getElementById('settings-modal'),
+            closeSettingsBtn: document.getElementById('close-settings-btn'),
+            weatherToggle: document.getElementById('weather-toggle'),
+            photoToggle: document.getElementById('photo-toggle'),
+            weatherWidget: document.getElementById('weather-widget'),
+            photoWidget: document.getElementById('photo-widget'),
+            timezoneSelect: document.getElementById('timezone-select'),
+            yearFormatSelect: document.getElementById('year-format-select'),
+            opacitySlider: document.getElementById('opacity-slider'),
+            bgModeSelect: document.getElementById('bg-mode-select'),
+            customBgUploadContainer: document.getElementById('custom-bg-upload-container'),
+            bgFileInput: document.getElementById('bg-file-input'),
+            customBgFilename: document.getElementById('custom-bg-filename'),
+        };
 
-        // State variables
-        let wakeLock = null;
-        let clockInterval = null;
-        let isCharging = false;
+        let state = {
+            wakeLock: null,
+            clockInterval: null,
+            photoInterval: null,
+            isCharging: false,
+            settings: {
+                showWeather: false,
+                showPhotos: false,
+                timeZone: 'Asia/Bangkok',
+                yearFormat: 'buddhist', // 'buddhist' or 'gregory'
+                clockOpacity: 1.0,
+                backgroundMode: 'random', // 'random' or 'custom'
+                customBgUrl: null,
+            }
+        };
 
-        // --- Icons ---
-        const landscapeIcon = `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>`;
-        const chargingIcon = `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>`;
+        const icons = {
+            landscape: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>`,
+            charging: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>`
+        };
 
-        // --- Wake Lock API Functions ---
+        // --- Settings Management ---
+        const saveSettings = () => localStorage.setItem('standbySettings_v2', JSON.stringify(state.settings));
+
+        const loadSettings = () => {
+            const saved = localStorage.getItem('standbySettings_v2');
+            if (saved) {
+                state.settings = { ...state.settings, ...JSON.parse(saved) };
+            }
+            // Apply loaded settings to the UI
+            elements.weatherToggle.checked = state.settings.showWeather;
+            elements.photoToggle.checked = state.settings.showPhotos;
+            elements.timezoneSelect.value = state.settings.timeZone;
+            elements.yearFormatSelect.value = state.settings.yearFormat;
+            elements.opacitySlider.value = state.settings.clockOpacity;
+            elements.bgModeSelect.value = state.settings.backgroundMode;
+            elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีภาพที่อัปโหลดไว้แล้ว" : "";
+        };
+
+        // --- UI Application Functions ---
+        const applyClockOpacity = () => {
+            elements.clockContainer.style.opacity = state.settings.clockOpacity;
+        };
+
+        const applyBackgroundMode = () => {
+            if (state.settings.backgroundMode === 'custom') {
+                elements.customBgUploadContainer.style.display = 'block';
+            } else {
+                elements.customBgUploadContainer.style.display = 'none';
+            }
+        };
+
+        // --- Wake Lock ---
         const requestWakeLock = async () => {
             if ('wakeLock' in navigator) {
                 try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock is active.');
-                } catch (err) { console.error(`Wake Lock failed: ${err.name}, ${err.message}`); }
+                    state.wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) { console.error('Wake Lock failed:', err); }
             }
         };
-
         const releaseWakeLock = async () => {
-            if (wakeLock !== null) {
-                await wakeLock.release();
-                wakeLock = null;
-                console.log('Wake Lock released.');
+            if (state.wakeLock) {
+                await state.wakeLock.release();
+                state.wakeLock = null;
             }
         };
 
-        // --- Clock and Date Functions ---
+        // --- Widgets & Clock ---
         const updateClock = () => {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            timeEl.textContent = `${hours}:${minutes}`;
-            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
-            dateEl.textContent = now.toLocaleDateString('th-TH', dateOptions);
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: state.settings.timeZone };
+            const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: state.settings.timeZone, calendar: state.settings.yearFormat };
+            elements.time.textContent = now.toLocaleTimeString('th-TH', timeOptions);
+            elements.date.textContent = now.toLocaleDateString('th-TH', dateOptions);
         };
 
-        // --- UI Update Function ---
-        const updatePortraitMessage = () => {
-            const isLandscape = screen.orientation.type.includes('landscape');
-            if (!isLandscape) {
-                 if (isCharging) {
-                    portraitIcon.innerHTML = landscapeIcon;
-                    portraitTitle.textContent = "โหมด StandBy พร้อมทำงาน";
-                    portraitText.innerHTML = "กรุณาหมุนอุปกรณ์เป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ";
-                } else {
-                    portraitIcon.innerHTML = chargingIcon;
-                    portraitTitle.textContent = "กรุณาเสียบสายชาร์จ";
-                    portraitText.innerHTML = "โหมด StandBy จะทำงานเมื่อ<br>อุปกรณ์ของคุณกำลังชาร์จไฟ";
-                }
+        const updateBackgroundImage = () => {
+            if (state.settings.backgroundMode === 'custom' && state.settings.customBgUrl) {
+                elements.photoWidget.style.backgroundImage = `url(${state.settings.customBgUrl})`;
+            } else {
+                const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
+                elements.photoWidget.style.backgroundImage = `url(https://source.unsplash.com/random/800x600?${query}&t=${new Date().getTime()})`;
             }
         };
 
-        // --- Core Logic ---
+        const startPhotoSlideshow = () => {
+            if (state.photoInterval) clearInterval(state.photoInterval);
+            updateBackgroundImage();
+            state.photoInterval = setInterval(updateBackgroundImage, 20000);
+        };
+        const stopPhotoSlideshow = () => {
+            if (state.photoInterval) clearInterval(state.photoInterval);
+        };
+        
+        const updateWidgetVisibility = () => {
+            elements.weatherWidget.style.display = state.settings.showWeather ? 'flex' : 'none';
+            if (state.settings.showWeather) fetchWeather();
+
+            elements.photoWidget.style.display = state.settings.showPhotos ? 'block' : 'none';
+            if (state.settings.showPhotos) startPhotoSlideshow(); else stopPhotoSlideshow();
+        };
+
+        // --- Main State Handler ---
         const handleStateChange = () => {
             const isLandscape = screen.orientation.type.includes('landscape');
-
-            if (isLandscape && isCharging) {
-                // --- Enter StandBy Mode ---
-                portraitView.classList.replace('visible-view', 'hidden-view');
-                standbyView.classList.replace('hidden-view', 'visible-view');
+            if (isLandscape && state.isCharging) {
+                elements.portraitView.classList.replace('visible-view', 'hidden-view');
+                elements.standbyView.classList.replace('hidden-view', 'visible-view');
                 requestWakeLock();
                 updateClock();
-                if (clockInterval) clearInterval(clockInterval);
-                // Update once a minute is enough if not showing seconds, saves battery
-                clockInterval = setInterval(updateClock, 60 * 1000); 
+                if (state.clockInterval) clearInterval(state.clockInterval);
+                state.clockInterval = setInterval(updateClock, 15000); // Update more frequently for timezone changes
+                updateWidgetVisibility();
+                applyClockOpacity();
             } else {
-                // --- Exit StandBy Mode ---
-                standbyView.classList.replace('visible-view', 'hidden-view');
-                portraitView.classList.replace('hidden-view', 'visible-view');
+                elements.standbyView.classList.replace('visible-view', 'hidden-view');
+                elements.portraitView.classList.replace('hidden-view', 'visible-view');
                 releaseWakeLock();
-                if (clockInterval) {
-                    clearInterval(clockInterval);
-                    clockInterval = null;
-                }
-                // Update the message in portrait mode based on charging state
+                if (state.clockInterval) clearInterval(state.clockInterval);
+                stopPhotoSlideshow();
                 updatePortraitMessage();
             }
         };
 
-        // --- Battery API ---
+        // --- Populate Timezone Select ---
+        const populateTimezones = () => {
+            const timezones = ['Asia/Bangkok', 'Europe/London', 'Asia/Tokyo', 'America/New_York', 'Australia/Sydney', 'UTC'];
+            timezones.forEach(tz => {
+                const option = document.createElement('option');
+                option.value = tz;
+                option.textContent = tz;
+                elements.timezoneSelect.appendChild(option);
+            });
+        };
+
+        // --- Event Listeners Setup ---
+        const setupEventListeners = () => {
+            elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.replace('hidden-view', 'visible-view'));
+            elements.closeSettingsBtn.addEventListener('click', () => {
+                elements.settingsModal.classList.replace('visible-view', 'hidden-view');
+                saveSettings();
+                handleStateChange();
+            });
+            
+            elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
+            elements.photoToggle.addEventListener('change', e => state.settings.showPhotos = e.target.checked);
+            elements.timezoneSelect.addEventListener('change', e => state.settings.timeZone = e.target.value);
+            elements.yearFormatSelect.addEventListener('change', e => state.settings.yearFormat = e.target.value);
+            elements.opacitySlider.addEventListener('input', e => {
+                state.settings.clockOpacity = e.target.value;
+                applyClockOpacity();
+            });
+            elements.bgModeSelect.addEventListener('change', e => {
+                state.settings.backgroundMode = e.target.value;
+                applyBackgroundMode();
+            });
+            elements.bgFileInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        state.settings.customBgUrl = event.target.result;
+                        elements.customBgFilename.textContent = file.name;
+                        saveSettings(); 
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            screen.orientation.addEventListener('change', handleStateChange);
+        };
+
+        // --- Initialisation ---
         const setupBatteryListener = () => {
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
-                    isCharging = battery.charging;
-                    console.log(`Initial charging state: ${isCharging}`);
-                    
-                    // Listen for changes in charging status
+                    state.isCharging = battery.charging;
                     battery.addEventListener('chargingchange', () => {
-                        isCharging = battery.charging;
-                        console.log(`Charging state changed: ${isCharging}`);
-                        handleStateChange(); // Re-evaluate state on change
+                        state.isCharging = battery.charging;
+                        handleStateChange();
                     });
-                    
-                    // Initial check
                     handleStateChange();
                 });
             } else {
-                console.log('Battery Status API not supported. Standby will work without charging check.');
-                isCharging = true; // Assume it's always "charging" to allow functionality
+                state.isCharging = true;
                 handleStateChange();
             }
         };
 
-        // --- Event Listeners and Initialisation ---
-        screen.orientation.addEventListener('change', handleStateChange);
+        const getWeatherDescription = (code) => {
+            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 48: "มีหมอกหนา", 51: "ฝนตกปรอยๆ", 53: "ฝนตกปรอยๆ", 55: "ฝนตกปรอยๆ", 61: "ฝนตกเล็กน้อย", 63: "ฝนตกปานกลาง", 65: "ฝนตกหนัก", 80: "ฝนโปรย", 81: "ฝนโปรย", 82: "ฝนโปรย", 95: "พายุฝนฟ้าคะนอง"};
+            return descriptions[code] || "ไม่ทราบสภาพอากาศ";
+        };
+        const fetchWeather = () => {
+            elements.weatherWidget.innerHTML = `<p>กำลังโหลดสภาพอากาศ...</p>`;
+            navigator.geolocation.getCurrentPosition(async position => {
+                const { latitude, longitude } = position.coords;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    const { temperature, weathercode } = data.current_weather;
+                    elements.weatherWidget.innerHTML = `
+                        <div class="text-center">
+                           <p class="text-5xl font-bold">${Math.round(temperature)}°C</p>
+                           <p class="mt-2">${getWeatherDescription(weathercode)}</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    elements.weatherWidget.innerHTML = `<p>ไม่สามารถโหลดข้อมูลได้</p>`;
+                }
+            }, () => {
+                elements.weatherWidget.innerHTML = `<p>กรุณาอนุญาตให้เข้าถึงตำแหน่ง</p>`;
+            });
+        };
+        const updatePortraitMessage = () => {
+            if (state.isCharging) {
+                elements.portraitIcon.innerHTML = icons.landscape;
+                elements.portraitTitle.textContent = "โหมด StandBy พร้อมทำงาน";
+                elements.portraitText.innerHTML = "กรุณาหมุนอุปกรณ์เป็นแนวนอน";
+            } else {
+                elements.portraitIcon.innerHTML = icons.charging;
+                elements.portraitTitle.textContent = "กรุณาเสียบสายชาร์จ";
+                elements.portraitText.innerHTML = "โหมด StandBy จะทำงานเมื่อ<br>อุปกรณ์ของคุณกำลังชาร์จไฟ";
+            }
+        };
+        
         window.addEventListener('load', () => {
+            populateTimezones();
+            loadSettings();
+            applyClockOpacity();
+            applyBackgroundMode();
+            setupEventListeners();
             setupBatteryListener();
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('service-worker.js');
             }
         });
+
     </script>
 </body>
 </html>
