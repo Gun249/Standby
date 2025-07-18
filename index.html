@@ -18,7 +18,15 @@
         .view, .modal { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
         .hidden-view { opacity: 0; pointer-events: none; transform: scale(0.95); }
         .visible-view { opacity: 1; transform: scale(1); }
-        #photo-widget { background-size: cover; background-position: center; transition: background-image 1s ease-in-out, opacity 0.5s; }
+        #main-background {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.5s ease-in-out, opacity 1s ease-in-out;
+            opacity: 0;
+            z-index: 0;
+        }
         /* Custom file input button */
         input[type="file"] { display: none; }
         .custom-file-upload { border: 1px solid #4a5568; display: inline-block; padding: 6px 12px; cursor: pointer; background-color: #2d3748; border-radius: 0.5rem; text-align: center; }
@@ -43,38 +51,32 @@
         </div>
 
         <!-- StandBy View (Landscape) -->
-        <div id="standby-view" class="view hidden-view absolute inset-0 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 sm:p-8">
-            <div id="clock-container" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
-                <div class="text-center">
-                    <div id="time" class="font-black text-red-500" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
-                    <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
-                    <div id="secondary-clock" class="font-semibold text-gray-300 mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
+        <div id="standby-view" class="view hidden-view absolute inset-0 p-4 sm:p-8">
+            <div id="main-background"></div>
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+                <div id="clock-container" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
+                    <div class="text-center">
+                        <div id="time" class="font-black text-red-500" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
+                        <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
+                        <div id="secondary-clock" class="font-semibold text-gray-300 mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="flex flex-col gap-4">
-                <div id="weather-widget" class="hidden h-1/2 bg-white/10 rounded-2xl p-4 items-center justify-center text-center"></div>
-                <div id="photo-widget" class="hidden h-1/2 bg-white/10 rounded-2xl"></div>
+                <div class="flex items-center justify-center">
+                    <div id="weather-widget" class="hidden bg-black/30 backdrop-blur-md rounded-2xl p-6 text-center"></div>
+                </div>
             </div>
         </div>
 
         <!-- Opacity Slider Modal -->
-        <div id="opacity-modal" class="modal hidden-view absolute inset-0 bg-black/50 flex items-center justify-center p-8">
+        <div id="opacity-modal" class="modal hidden-view absolute inset-0 bg-black/50 flex items-center justify-center p-8 z-30">
             <input type="range" id="live-opacity-slider" min="0.2" max="1" step="0.05" class="w-full max-w-md h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer">
         </div>
 
         <!-- Settings Modal -->
-        <div id="settings-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="settings-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-30">
             <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md max-h-full overflow-y-auto">
                 <h2 class="text-xl font-bold mb-6">ตั้งค่าการแสดงผล</h2>
                 <div class="space-y-6">
-                    <!-- Widget Settings -->
-                    <div>
-                        <h3 class="font-bold mb-2">วิดเจ็ต</h3>
-                        <div class="space-y-2 p-4 bg-gray-800 rounded-lg">
-                            <label class="flex items-center justify-between"><span class="text-gray-300">พยากรณ์อากาศ</span><input type="checkbox" id="weather-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
-                            <label class="flex items-center justify-between"><span class="text-gray-300">สไลด์โชว์รูปภาพ</span><input type="checkbox" id="photo-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
-                        </div>
-                    </div>
                     <!-- Clock Settings -->
                     <div>
                         <h3 class="font-bold mb-2">นาฬิกา</h3>
@@ -84,18 +86,23 @@
                             <label class="block"><span class="text-gray-300">รูปแบบปี</span><select id="year-format-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"><option value="buddhist">พ.ศ.</option><option value="gregory">ค.ศ.</option></select></label>
                         </div>
                     </div>
-                    <!-- Background Settings -->
+                    <!-- Widget & Background Settings -->
                     <div>
-                        <h3 class="font-bold mb-2">พื้นหลัง (ในวิดเจ็ตภาพ)</h3>
-                        <div class="p-4 bg-gray-800 rounded-lg">
-                            <select id="bg-mode-select" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-                                <option value="random">สุ่มภาพอัตโนมัติ</option>
-                                <option value="custom">อัปโหลดภาพเอง</option>
-                            </select>
-                            <div id="custom-bg-upload-container" class="hidden mt-4">
-                                <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพ</label>
-                                <input id="bg-file-input" type="file" accept="image/*">
-                                <p id="custom-bg-filename" class="text-xs text-gray-400 mt-2 truncate"></p>
+                        <h3 class="font-bold mb-2">วิดเจ็ตและพื้นหลัง</h3>
+                        <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                            <label class="flex items-center justify-between"><span class="text-gray-300">พยากรณ์อากาศ</span><input type="checkbox" id="weather-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
+                            <hr class="border-gray-700">
+                            <label class="flex items-center justify-between"><span class="text-gray-300">แสดงภาพพื้นหลัง</span><input type="checkbox" id="photo-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
+                            <div id="background-options-container" class="hidden space-y-2 pt-2">
+                                <select id="bg-mode-select" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                                    <option value="random">สุ่มภาพอัตโนมัติ</option>
+                                    <option value="custom">อัปโหลดภาพเอง</option>
+                                </select>
+                                <div id="custom-bg-upload-container" class="hidden">
+                                    <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพ</label>
+                                    <input id="bg-file-input" type="file" accept="image/*">
+                                    <p id="custom-bg-filename" class="text-xs text-gray-400 mt-2 truncate"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -108,6 +115,7 @@
     <script>
         // --- DOM Elements & State Initialization ---
         const elements = {
+            mainBackground: document.getElementById('main-background'),
             clockContainer: document.getElementById('clock-container'),
             time: document.getElementById('time'),
             date: document.getElementById('date'),
@@ -125,7 +133,7 @@
             weatherToggle: document.getElementById('weather-toggle'),
             photoToggle: document.getElementById('photo-toggle'),
             weatherWidget: document.getElementById('weather-widget'),
-            photoWidget: document.getElementById('photo-widget'),
+            backgroundOptionsContainer: document.getElementById('background-options-container'),
             timezoneSelect1: document.getElementById('timezone-select-1'),
             timezoneSelect2: document.getElementById('timezone-select-2'),
             yearFormatSelect: document.getElementById('year-format-select'),
@@ -163,10 +171,10 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v4', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v5', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v4');
+            const saved = localStorage.getItem('standbySettings_v5');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
@@ -177,11 +185,22 @@
             elements.yearFormatSelect.value = state.settings.yearFormat;
             elements.bgModeSelect.value = state.settings.backgroundMode;
             elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีภาพที่อัปโหลดไว้แล้ว" : "";
+            
+            // Update UI based on loaded settings
+            toggleBackgroundOptions();
+            applyBackgroundMode();
         };
 
         // --- UI Application Functions ---
         const applyClockOpacity = () => elements.clockContainer.style.opacity = state.settings.clockOpacity;
-        const applyBackgroundMode = () => elements.customBgUploadContainer.style.display = state.settings.backgroundMode === 'custom' ? 'block' : 'none';
+        
+        const toggleBackgroundOptions = () => {
+            elements.backgroundOptionsContainer.style.display = state.settings.showPhotos ? 'block' : 'none';
+        };
+
+        const applyBackgroundMode = () => {
+            elements.customBgUploadContainer.style.display = state.settings.backgroundMode === 'custom' ? 'block' : 'none';
+        };
 
         // --- Wake Lock ---
         const requestWakeLock = async () => {
@@ -209,13 +228,11 @@
 
         const updateClock = () => {
             const now = new Date();
-            // Main Clock
             const mainTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone1 };
             const mainDateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: state.settings.timeZone1, calendar: state.settings.yearFormat };
             elements.time.textContent = now.toLocaleTimeString('en-US', mainTimeOptions);
             elements.date.textContent = now.toLocaleDateString('th-TH', mainDateOptions);
             
-            // Secondary Clock
             const secondaryTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone2 };
             const secondaryTimeString = now.toLocaleTimeString('en-US', secondaryTimeOptions);
             const countryCode = timezoneToCountryCode[state.settings.timeZone2];
@@ -225,18 +242,18 @@
 
         const updateBackgroundImage = () => {
             if (state.settings.backgroundMode === 'custom' && state.settings.customBgUrl) {
-                elements.photoWidget.style.backgroundImage = `url(${state.settings.customBgUrl})`;
+                elements.mainBackground.style.backgroundImage = `url(${state.settings.customBgUrl})`;
             } else {
                 const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
-                elements.photoWidget.style.backgroundImage = `url(https://source.unsplash.com/random/800x600?${query}&t=${new Date().getTime()})`;
+                elements.mainBackground.style.backgroundImage = `url(https://source.unsplash.com/random/1280x720?${query}&t=${new Date().getTime()})`;
             }
         };
-        const startPhotoSlideshow = () => {
+        const startBackgroundSlideshow = () => {
             if (state.photoInterval) clearInterval(state.photoInterval);
             updateBackgroundImage();
             state.photoInterval = setInterval(updateBackgroundImage, 20000);
         };
-        const stopPhotoSlideshow = () => {
+        const stopBackgroundSlideshow = () => {
             if (state.photoInterval) {
                 clearInterval(state.photoInterval);
                 state.photoInterval = null;
@@ -254,12 +271,7 @@
                 try {
                     const response = await fetch(url);
                     const data = await response.json();
-                    elements.weatherWidget.innerHTML = `
-                        <div class="text-center">
-                           <p class="text-5xl font-bold">${Math.round(data.current_weather.temperature)}°C</p>
-                           <p class="mt-2">${getWeatherDescription(data.current_weather.weathercode)}</p>
-                        </div>
-                    `;
+                    elements.weatherWidget.innerHTML = `<p class="text-5xl font-bold">${Math.round(data.current_weather.temperature)}°C</p><p class="mt-2">${getWeatherDescription(data.current_weather.weathercode)}</p>`;
                 } catch (error) {
                     elements.weatherWidget.innerHTML = `<p>ไม่สามารถโหลดข้อมูลได้</p>`;
                 }
@@ -268,11 +280,17 @@
             });
         };
         const updateWidgetVisibility = () => {
-            elements.weatherWidget.style.display = state.settings.showWeather ? 'flex' : 'none';
-            if (state.settings.showWeather) fetchWeather();
+            elements.weatherWidget.style.display = state.settings.showWeather ? 'block' : 'none';
+            if (state.settings.showWeather) {
+                fetchWeather();
+            }
 
-            elements.photoWidget.style.display = state.settings.showPhotos ? 'block' : 'none';
-            if (state.settings.showPhotos) startPhotoSlideshow(); else stopPhotoSlideshow();
+            elements.mainBackground.style.opacity = state.settings.showPhotos ? '1' : '0';
+            if (state.settings.showPhotos) {
+                startBackgroundSlideshow();
+            } else {
+                stopBackgroundSlideshow();
+            }
         };
 
         // --- Main State Handler ---
@@ -295,7 +313,7 @@
                     clearInterval(state.clockInterval);
                     state.clockInterval = null;
                 }
-                stopPhotoSlideshow();
+                stopBackgroundSlideshow();
                 updatePortraitMessage();
             }
         };
@@ -316,7 +334,6 @@
         const populateTimezones = () => {
             const timezones = Object.keys(timezoneToCountryCode);
             [elements.timezoneSelect1, elements.timezoneSelect2].forEach(select => {
-                // Clear existing options
                 select.innerHTML = '';
                 timezones.forEach(tz => {
                     const option = document.createElement('option');
@@ -329,7 +346,6 @@
 
         // --- Event Listeners Setup ---
         const setupEventListeners = () => {
-            // Settings Modal
             elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.replace('hidden-view', 'visible-view'));
             elements.closeSettingsBtn.addEventListener('click', () => {
                 elements.settingsModal.classList.replace('visible-view', 'hidden-view');
@@ -337,13 +353,12 @@
                 handleStateChange();
             });
             
-            // Opacity Long Press
             const startPress = (e) => {
                 e.preventDefault();
                 state.longPressTimer = setTimeout(() => {
                     elements.opacityModal.classList.replace('hidden-view', 'visible-view');
                     elements.liveOpacitySlider.value = state.settings.clockOpacity;
-                }, 500); // 500ms for long press
+                }, 500);
             };
             const cancelPress = () => clearTimeout(state.longPressTimer);
             elements.clockContainer.addEventListener('mousedown', startPress);
@@ -352,7 +367,6 @@
             elements.clockContainer.addEventListener('mouseleave', cancelPress);
             elements.clockContainer.addEventListener('touchend', cancelPress);
 
-            // Opacity Modal Listeners
             elements.liveOpacitySlider.addEventListener('input', e => {
                 state.settings.clockOpacity = e.target.value;
                 applyClockOpacity();
@@ -364,9 +378,11 @@
                 }
             });
             
-            // Settings Listeners
             elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
-            elements.photoToggle.addEventListener('change', e => state.settings.showPhotos = e.target.checked);
+            elements.photoToggle.addEventListener('change', e => {
+                state.settings.showPhotos = e.target.checked;
+                toggleBackgroundOptions();
+            });
             elements.timezoneSelect1.addEventListener('change', e => state.settings.timeZone1 = e.target.value);
             elements.timezoneSelect2.addEventListener('change', e => state.settings.timeZone2 = e.target.value);
             elements.yearFormatSelect.addEventListener('change', e => state.settings.yearFormat = e.target.value);
@@ -408,7 +424,6 @@
             populateTimezones();
             loadSettings();
             applyClockOpacity();
-            applyBackgroundMode();
             setupEventListeners();
             setupBatteryListener();
             if ('serviceWorker' in navigator) {
