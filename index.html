@@ -8,28 +8,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lora:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
 
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; touch-action: manipulation; }
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; touch-action: manipulation; }
         html, body { overflow: hidden; }
         .view, .modal { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
         .hidden-view { opacity: 0; pointer-events: none; transform: scale(0.95); }
         .visible-view { opacity: 1; transform: scale(1); }
-        #main-background {
+        .background-media {
             position: absolute;
             inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+        #main-background {
             background-size: cover;
             background-position: center;
-            transition: background-image 1.5s ease-in-out, opacity 1s ease-in-out;
-            opacity: 0;
-            z-index: 0;
+            transition-property: background-image, opacity;
+            transition-duration: 1.5s;
+            transition-timing-function: ease-in-out;
         }
-        /* Custom file input button */
+        #bg-video { object-fit: cover; }
+        /* Custom file/color input */
         input[type="file"] { display: none; }
         .custom-file-upload { border: 1px solid #4a5568; display: inline-block; padding: 6px 12px; cursor: pointer; background-color: #2d3748; border-radius: 0.5rem; text-align: center; }
+        input[type="color"] { -webkit-appearance: none; -moz-appearance: none; appearance: none; width: 48px; height: 32px; background-color: transparent; border: none; cursor: pointer; }
+        input[type="color"]::-webkit-color-swatch { border-radius: 0.25rem; border: 1px solid #4a5568; }
+        input[type="color"]::-moz-color-swatch { border-radius: 0.25rem; border: 1px solid #4a5568; }
         /* Opacity Slider Thumb */
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
         input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
@@ -46,19 +57,21 @@
             <h1 id="portrait-title" class="text-2xl font-bold mb-2">โหมด StandBy</h1>
             <p id="portrait-text" class="text-gray-400">กรุณาหมุนอุปกรณ์เป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ</p>
             <button id="settings-btn" class="absolute top-5 right-5 p-2 text-gray-400 hover:text-white transition">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495-.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
             </button>
         </div>
 
         <!-- StandBy View (Landscape) -->
         <div id="standby-view" class="view hidden-view absolute inset-0 p-4 sm:p-8">
-            <div id="main-background"></div>
+            <div id="main-background" class="background-media"></div>
+            <video id="bg-video" class="background-media" muted loop playsinline></video>
+            
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
                 <div id="clock-container" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
                     <div class="text-center">
-                        <div id="time" class="font-black text-red-500" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
-                        <div id="date" class="font-bold text-white mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
-                        <div id="secondary-clock" class="font-semibold text-gray-300 mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
+                        <div id="time" class="font-black" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
+                        <div id="date" class="font-bold mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
+                        <div id="secondary-clock" class="font-semibold mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
                     </div>
                 </div>
                 <div class="flex items-center justify-center">
@@ -96,14 +109,30 @@
                             <div id="background-options-container" class="hidden space-y-2 pt-2">
                                 <select id="bg-mode-select" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
                                     <option value="random">สุ่มภาพอัตโนมัติ</option>
-                                    <option value="custom">อัปโหลดภาพเอง</option>
+                                    <option value="custom">อัปโหลดไฟล์เอง</option>
                                 </select>
                                 <div id="custom-bg-upload-container" class="hidden">
-                                    <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพ</label>
-                                    <input id="bg-file-input" type="file" accept="image/*">
+                                    <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพหรือวิดีโอ</label>
+                                    <input id="bg-file-input" type="file" accept="image/*,video/*">
                                     <p id="custom-bg-filename" class="text-xs text-gray-400 mt-2 truncate"></p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                     <!-- Color & Font Settings -->
+                    <div>
+                        <h3 class="font-bold mb-2">สีและฟอนต์</h3>
+                        <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                            <div id="background-color-container">
+                                <label class="flex items-center justify-between"><span class="text-gray-300">สีพื้นหลัง</span><input type="color" id="bg-color-input"></label>
+                            </div>
+                            <label class="flex items-center justify-between"><span class="text-gray-300">สีนาฬิกาหลัก</span><input type="color" id="primary-color-input"></label>
+                            <label class="flex items-center justify-between"><span class="text-gray-300">สีข้อความรอง</span><input type="color" id="secondary-color-input"></label>
+                             <label class="block"><span class="text-gray-300">รูปแบบฟอนต์</span><select id="font-family-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                                <option value="'Inter', sans-serif">Inter (มาตรฐาน)</option>
+                                <option value="'Lora', serif">Lora (มีหัว)</option>
+                                <option value="'Roboto Mono', monospace">Roboto Mono (ดิจิทัล)</option>
+                            </select></label>
                         </div>
                     </div>
                 </div>
@@ -115,7 +144,9 @@
     <script>
         // --- DOM Elements & State Initialization ---
         const elements = {
+            app: document.getElementById('app'),
             mainBackground: document.getElementById('main-background'),
+            bgVideo: document.getElementById('bg-video'),
             clockContainer: document.getElementById('clock-container'),
             time: document.getElementById('time'),
             date: document.getElementById('date'),
@@ -134,6 +165,7 @@
             photoToggle: document.getElementById('photo-toggle'),
             weatherWidget: document.getElementById('weather-widget'),
             backgroundOptionsContainer: document.getElementById('background-options-container'),
+            backgroundColorContainer: document.getElementById('background-color-container'),
             timezoneSelect1: document.getElementById('timezone-select-1'),
             timezoneSelect2: document.getElementById('timezone-select-2'),
             yearFormatSelect: document.getElementById('year-format-select'),
@@ -141,6 +173,10 @@
             customBgUploadContainer: document.getElementById('custom-bg-upload-container'),
             bgFileInput: document.getElementById('bg-file-input'),
             customBgFilename: document.getElementById('custom-bg-filename'),
+            bgColorInput: document.getElementById('bg-color-input'),
+            primaryColorInput: document.getElementById('primary-color-input'),
+            secondaryColorInput: document.getElementById('secondary-color-input'),
+            fontFamilySelect: document.getElementById('font-family-select'),
         };
 
         let state = {
@@ -157,7 +193,12 @@
                 yearFormat: 'buddhist',
                 clockOpacity: 1.0,
                 backgroundMode: 'random',
+                backgroundType: 'random',
                 customBgUrl: null,
+                backgroundColor: '#000000',
+                primaryColor: '#ef4444',
+                secondaryColor: '#ffffff',
+                fontFamily: "'Inter', sans-serif",
             }
         };
 
@@ -171,10 +212,10 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v5', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v7', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v5');
+            const saved = localStorage.getItem('standbySettings_v7');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
@@ -184,18 +225,32 @@
             elements.timezoneSelect2.value = state.settings.timeZone2;
             elements.yearFormatSelect.value = state.settings.yearFormat;
             elements.bgModeSelect.value = state.settings.backgroundMode;
-            elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีภาพที่อัปโหลดไว้แล้ว" : "";
+            elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีไฟล์ที่อัปโหลดไว้แล้ว" : "";
+            elements.bgColorInput.value = state.settings.backgroundColor;
+            elements.primaryColorInput.value = state.settings.primaryColor;
+            elements.secondaryColorInput.value = state.settings.secondaryColor;
+            elements.fontFamilySelect.value = state.settings.fontFamily;
             
-            // Update UI based on loaded settings
             toggleBackgroundOptions();
             applyBackgroundMode();
+            applyColorAndFontSettings();
         };
 
         // --- UI Application Functions ---
         const applyClockOpacity = () => elements.clockContainer.style.opacity = state.settings.clockOpacity;
         
+        const applyColorAndFontSettings = () => {
+            document.body.style.backgroundColor = state.settings.backgroundColor;
+            elements.time.style.color = state.settings.primaryColor;
+            elements.date.style.color = state.settings.secondaryColor;
+            elements.secondaryClock.style.color = state.settings.secondaryColor;
+            elements.app.style.fontFamily = state.settings.fontFamily;
+        };
+
         const toggleBackgroundOptions = () => {
-            elements.backgroundOptionsContainer.style.display = state.settings.showPhotos ? 'block' : 'none';
+            const showPhotos = state.settings.showPhotos;
+            elements.backgroundOptionsContainer.style.display = showPhotos ? 'block' : 'none';
+            elements.backgroundColorContainer.style.display = showPhotos ? 'none' : 'flex';
         };
 
         const applyBackgroundMode = () => {
@@ -205,18 +260,11 @@
         // --- Wake Lock ---
         const requestWakeLock = async () => {
             if ('wakeLock' in navigator) {
-                try {
-                    state.wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock is active.');
-                } catch (err) { console.error('Wake Lock failed:', err); }
+                try { state.wakeLock = await navigator.wakeLock.request('screen'); } catch (err) { console.error('Wake Lock failed:', err); }
             }
         };
         const releaseWakeLock = async () => {
-            if (state.wakeLock) {
-                await state.wakeLock.release();
-                state.wakeLock = null;
-                console.log('Wake Lock released.');
-            }
+            if (state.wakeLock) { await state.wakeLock.release(); }
         };
 
         // --- Widgets & Clock ---
@@ -240,56 +288,69 @@
             elements.secondaryClock.innerHTML = `<span>${flag}</span> ${secondaryTimeString}`;
         };
 
-        const updateBackgroundImage = () => {
-            if (state.settings.backgroundMode === 'custom' && state.settings.customBgUrl) {
-                elements.mainBackground.style.backgroundImage = `url(${state.settings.customBgUrl})`;
-            } else {
-                const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
-                elements.mainBackground.style.backgroundImage = `url(https://source.unsplash.com/random/1280x720?${query}&t=${new Date().getTime()})`;
-            }
-        };
-        const startBackgroundSlideshow = () => {
+        const updateBackgroundMedia = () => {
             if (state.photoInterval) clearInterval(state.photoInterval);
-            updateBackgroundImage();
-            state.photoInterval = setInterval(updateBackgroundImage, 20000);
-        };
-        const stopBackgroundSlideshow = () => {
-            if (state.photoInterval) {
-                clearInterval(state.photoInterval);
-                state.photoInterval = null;
+            elements.bgVideo.pause();
+            elements.mainBackground.style.opacity = '0';
+            elements.bgVideo.style.opacity = '0';
+
+            const mode = state.settings.backgroundMode;
+            const type = state.settings.backgroundType;
+
+            if (mode === 'random') {
+                const updateRandomImage = () => {
+                    const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
+                    elements.mainBackground.style.backgroundImage = `url(https://source.unsplash.com/random/1280x720?${query}&t=${new Date().getTime()})`;
+                    elements.mainBackground.style.opacity = '1';
+                };
+                updateRandomImage();
+                state.photoInterval = setInterval(updateRandomImage, 20000);
+            } else if (mode === 'custom' && state.settings.customBgUrl) {
+                if (type === 'image') {
+                    elements.mainBackground.style.backgroundImage = `url(${state.settings.customBgUrl})`;
+                    elements.mainBackground.style.opacity = '1';
+                } else if (type === 'video') {
+                    elements.bgVideo.src = state.settings.customBgUrl;
+                    elements.bgVideo.play();
+                    elements.bgVideo.style.opacity = '1';
+                }
             }
         };
+
+        const stopAllMedia = () => {
+            if (state.photoInterval) clearInterval(state.photoInterval);
+            elements.bgVideo.pause();
+            elements.mainBackground.style.opacity = '0';
+            elements.bgVideo.style.opacity = '0';
+        };
+        
         const getWeatherDescription = (code) => {
-            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 48: "มีหมอกหนา", 51: "ฝนตกปรอยๆ", 53: "ฝนตกปรอยๆ", 55: "ฝนตกปรอยๆ", 61: "ฝนตกเล็กน้อย", 63: "ฝนตกปานกลาง", 65: "ฝนตกหนัก", 80: "ฝนโปรย", 81: "ฝนโปรย", 82: "ฝนโปรย", 95: "พายุฝนฟ้าคะนอง"};
+            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 61: "ฝนตกเล็กน้อย", 95: "พายุฝนฟ้าคะนอง"};
             return descriptions[code] || "ไม่ทราบสภาพอากาศ";
         };
         const fetchWeather = () => {
             elements.weatherWidget.innerHTML = `<p>กำลังโหลด...</p>`;
             navigator.geolocation.getCurrentPosition(async position => {
-                const { latitude, longitude } = position.coords;
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&current_weather=true`;
                 try {
                     const response = await fetch(url);
                     const data = await response.json();
                     elements.weatherWidget.innerHTML = `<p class="text-5xl font-bold">${Math.round(data.current_weather.temperature)}°C</p><p class="mt-2">${getWeatherDescription(data.current_weather.weathercode)}</p>`;
                 } catch (error) {
-                    elements.weatherWidget.innerHTML = `<p>ไม่สามารถโหลดข้อมูลได้</p>`;
+                    elements.weatherWidget.innerHTML = `<p>โหลดข้อมูลไม่ได้</p>`;
                 }
             }, () => {
-                elements.weatherWidget.innerHTML = `<p>กรุณาอนุญาตให้เข้าถึงตำแหน่ง</p>`;
+                elements.weatherWidget.innerHTML = `<p>โปรดเปิดตำแหน่ง</p>`;
             });
         };
         const updateWidgetVisibility = () => {
             elements.weatherWidget.style.display = state.settings.showWeather ? 'block' : 'none';
-            if (state.settings.showWeather) {
-                fetchWeather();
-            }
+            if (state.settings.showWeather) fetchWeather();
 
-            elements.mainBackground.style.opacity = state.settings.showPhotos ? '1' : '0';
             if (state.settings.showPhotos) {
-                startBackgroundSlideshow();
+                updateBackgroundMedia();
             } else {
-                stopBackgroundSlideshow();
+                stopAllMedia();
             }
         };
 
@@ -302,18 +363,16 @@
                 requestWakeLock();
                 updateClock();
                 if (state.clockInterval) clearInterval(state.clockInterval);
-                state.clockInterval = setInterval(updateClock, 1000); // Update every second
+                state.clockInterval = setInterval(updateClock, 1000);
                 updateWidgetVisibility();
                 applyClockOpacity();
+                applyColorAndFontSettings();
             } else {
                 elements.standbyView.classList.replace('visible-view', 'hidden-view');
                 elements.portraitView.classList.replace('hidden-view', 'visible-view');
                 releaseWakeLock();
-                if (state.clockInterval) {
-                    clearInterval(state.clockInterval);
-                    state.clockInterval = null;
-                }
-                stopBackgroundSlideshow();
+                if (state.clockInterval) clearInterval(state.clockInterval);
+                stopAllMedia();
                 updatePortraitMessage();
             }
         };
@@ -389,16 +448,28 @@
             elements.bgModeSelect.addEventListener('change', e => { state.settings.backgroundMode = e.target.value; applyBackgroundMode(); });
             elements.bgFileInput.addEventListener('change', e => {
                 const file = e.target.files[0];
-                if (file) {
+                if (!file) return;
+                if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         state.settings.customBgUrl = event.target.result;
+                        state.settings.backgroundType = 'image';
                         elements.customBgFilename.textContent = file.name;
                         saveSettings(); 
                     };
                     reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    const url = URL.createObjectURL(file);
+                    state.settings.customBgUrl = url;
+                    state.settings.backgroundType = 'video';
+                    elements.customBgFilename.textContent = file.name;
+                    saveSettings();
                 }
             });
+            elements.bgColorInput.addEventListener('input', e => state.settings.backgroundColor = e.target.value, true);
+            elements.primaryColorInput.addEventListener('input', e => state.settings.primaryColor = e.target.value, true);
+            elements.secondaryColorInput.addEventListener('input', e => state.settings.secondaryColor = e.target.value, true);
+            elements.fontFamilySelect.addEventListener('change', e => state.settings.fontFamily = e.target.value);
             
             screen.orientation.addEventListener('change', handleStateChange);
         };
@@ -415,7 +486,7 @@
                     handleStateChange();
                 });
             } else {
-                state.isCharging = true; // Fallback for unsupported browsers
+                state.isCharging = true;
                 handleStateChange();
             }
         };
