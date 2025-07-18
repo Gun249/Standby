@@ -67,9 +67,12 @@
             <video id="bg-video" class="background-media" muted loop playsinline></video>
             
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-                <div id="clock-container" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
-                    <div class="text-center">
-                        <div id="time" class="font-black" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
+                <div id="clock-wrapper" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
+                    <div class="text-center w-full h-full flex flex-col items-center justify-center">
+                        <div id="clock-face-container" class="relative w-full flex-grow flex items-center justify-center">
+                            <div id="digital-time" class="font-black" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
+                            <canvas id="analog-clock-canvas" class="hidden absolute top-0 left-0"></canvas>
+                        </div>
                         <div id="date" class="font-bold mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
                         <div id="secondary-clock" class="font-semibold mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
                     </div>
@@ -94,6 +97,7 @@
                     <div>
                         <h3 class="font-bold mb-2">นาฬิกา</h3>
                         <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                            <label class="block"><span class="text-gray-300">รูปแบบนาฬิกา</span><select id="clock-type-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"><option value="digital">ดิจิทัล</option><option value="analog">เข็ม</option></select></label>
                             <label class="block"><span class="text-gray-300">โซนเวลาหลัก</span><select id="timezone-select-1" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
                             <label class="block"><span class="text-gray-300">โซนเวลาที่สอง</span><select id="timezone-select-2" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
                             <label class="block"><span class="text-gray-300">รูปแบบปี</span><select id="year-format-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"><option value="buddhist">พ.ศ.</option><option value="gregory">ค.ศ.</option></select></label>
@@ -126,7 +130,7 @@
                             <div id="background-color-container">
                                 <label class="flex items-center justify-between"><span class="text-gray-300">สีพื้นหลัง</span><input type="color" id="bg-color-input"></label>
                             </div>
-                            <label class="flex items-center justify-between"><span class="text-gray-300">สีนาฬิกาหลัก</span><input type="color" id="primary-color-input"></label>
+                            <label class="flex items-center justify-between"><span class="text-gray-300">สีนาฬิกาหลัก/เข็ม</span><input type="color" id="primary-color-input"></label>
                             <label class="flex items-center justify-between"><span class="text-gray-300">สีข้อความรอง</span><input type="color" id="secondary-color-input"></label>
                              <label class="block"><span class="text-gray-300">รูปแบบฟอนต์</span><select id="font-family-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
                                 <option value="'Inter', sans-serif">Inter (มาตรฐาน)</option>
@@ -147,8 +151,9 @@
             app: document.getElementById('app'),
             mainBackground: document.getElementById('main-background'),
             bgVideo: document.getElementById('bg-video'),
-            clockContainer: document.getElementById('clock-container'),
-            time: document.getElementById('time'),
+            clockWrapper: document.getElementById('clock-wrapper'),
+            digitalTime: document.getElementById('digital-time'),
+            analogClockCanvas: document.getElementById('analog-clock-canvas'),
             date: document.getElementById('date'),
             secondaryClock: document.getElementById('secondary-clock'),
             portraitView: document.getElementById('portrait-view'),
@@ -166,6 +171,7 @@
             weatherWidget: document.getElementById('weather-widget'),
             backgroundOptionsContainer: document.getElementById('background-options-container'),
             backgroundColorContainer: document.getElementById('background-color-container'),
+            clockTypeSelect: document.getElementById('clock-type-select'),
             timezoneSelect1: document.getElementById('timezone-select-1'),
             timezoneSelect2: document.getElementById('timezone-select-2'),
             yearFormatSelect: document.getElementById('year-format-select'),
@@ -188,6 +194,7 @@
             settings: {
                 showWeather: false,
                 showPhotos: false,
+                clockType: 'digital', // 'digital', 'analog'
                 timeZone1: 'Asia/Bangkok',
                 timeZone2: 'Europe/London',
                 yearFormat: 'buddhist',
@@ -212,15 +219,16 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v7', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v8', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v7');
+            const saved = localStorage.getItem('standbySettings_v8');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
             elements.weatherToggle.checked = state.settings.showWeather;
             elements.photoToggle.checked = state.settings.showPhotos;
+            elements.clockTypeSelect.value = state.settings.clockType;
             elements.timezoneSelect1.value = state.settings.timeZone1;
             elements.timezoneSelect2.value = state.settings.timeZone2;
             elements.yearFormatSelect.value = state.settings.yearFormat;
@@ -234,14 +242,15 @@
             toggleBackgroundOptions();
             applyBackgroundMode();
             applyColorAndFontSettings();
+            toggleClockTypeView();
         };
 
         // --- UI Application Functions ---
-        const applyClockOpacity = () => elements.clockContainer.style.opacity = state.settings.clockOpacity;
+        const applyClockOpacity = () => elements.clockWrapper.style.opacity = state.settings.clockOpacity;
         
         const applyColorAndFontSettings = () => {
             document.body.style.backgroundColor = state.settings.backgroundColor;
-            elements.time.style.color = state.settings.primaryColor;
+            elements.digitalTime.style.color = state.settings.primaryColor;
             elements.date.style.color = state.settings.secondaryColor;
             elements.secondaryClock.style.color = state.settings.secondaryColor;
             elements.app.style.fontFamily = state.settings.fontFamily;
@@ -257,6 +266,16 @@
             elements.customBgUploadContainer.style.display = state.settings.backgroundMode === 'custom' ? 'block' : 'none';
         };
 
+        const toggleClockTypeView = () => {
+            if (state.settings.clockType === 'analog') {
+                elements.digitalTime.classList.add('hidden');
+                elements.analogClockCanvas.classList.remove('hidden');
+            } else {
+                elements.digitalTime.classList.remove('hidden');
+                elements.analogClockCanvas.classList.add('hidden');
+            }
+        };
+
         // --- Wake Lock ---
         const requestWakeLock = async () => {
             if ('wakeLock' in navigator) {
@@ -267,18 +286,100 @@
             if (state.wakeLock) { await state.wakeLock.release(); }
         };
 
-        // --- Widgets & Clock ---
+        // --- Clock Drawing ---
         function getFlagEmoji(countryCode) {
             if (!countryCode) return '🏳️';
             const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
             return String.fromCodePoint(...codePoints);
         }
 
+        function drawAnalogClock(now) {
+            const canvas = elements.analogClockCanvas;
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+            
+            const size = Math.min(container.offsetWidth, container.offsetHeight) * 0.9;
+            canvas.width = size;
+            canvas.height = size;
+            
+            const radius = size / 2;
+            ctx.translate(radius, radius);
+
+            // Draw face
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.95, 0, 2 * Math.PI);
+            ctx.fillStyle = 'transparent';
+            ctx.fill();
+            ctx.strokeStyle = state.settings.secondaryColor;
+            ctx.lineWidth = radius * 0.05;
+            ctx.stroke();
+            
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.05, 0, 2 * Math.PI);
+            ctx.fillStyle = state.settings.primaryColor;
+            ctx.fill();
+
+            // Draw numbers
+            ctx.font = `bold ${radius * 0.15}px ${state.settings.fontFamily}`;
+            ctx.fillStyle = state.settings.secondaryColor;
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            for(let num = 1; num <= 12; num++){
+                let ang = num * Math.PI / 6;
+                ctx.rotate(ang);
+                ctx.translate(0, -radius * 0.8);
+                ctx.rotate(-ang);
+                ctx.fillText(num.toString(), 0, 0);
+                ctx.rotate(ang);
+                ctx.translate(0, radius * 0.8);
+                ctx.rotate(-ang);
+            }
+
+            // Draw hands
+            const hour = now.getHours() % 12;
+            const minute = now.getMinutes();
+            const second = now.getSeconds();
+
+            // Hour hand
+            let hourAngle = (hour*Math.PI/6) + (minute*Math.PI/(6*60)) + (second*Math.PI/(360*60));
+            drawHand(ctx, hourAngle, radius*0.5, radius*0.07, state.settings.primaryColor);
+            // Minute hand
+            let minuteAngle = (minute*Math.PI/30) + (second*Math.PI/(30*60));
+            drawHand(ctx, minuteAngle, radius*0.75, radius*0.05, state.settings.primaryColor);
+            // Second hand
+            let secondAngle = (second*Math.PI/30);
+            drawHand(ctx, secondAngle, radius*0.85, radius*0.02, state.settings.primaryColor);
+
+            ctx.translate(-radius, -radius); // Reset translation
+        }
+
+        function drawHand(ctx, pos, length, width, color) {
+            ctx.beginPath();
+            ctx.lineWidth = width;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = color;
+            ctx.moveTo(0,0);
+            ctx.rotate(pos);
+            ctx.lineTo(0, -length);
+            ctx.stroke();
+            ctx.rotate(-pos);
+        }
+
         const updateClock = () => {
             const now = new Date();
-            const mainTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone1 };
+            // Get time for the primary timezone
+            const primaryNowStr = now.toLocaleString('en-US', { timeZone: state.settings.timeZone1 });
+            const primaryNow = new Date(primaryNowStr);
+
+            if (state.settings.clockType === 'analog') {
+                drawAnalogClock(primaryNow);
+            } else {
+                const mainTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone1 };
+                elements.digitalTime.textContent = now.toLocaleTimeString('en-US', mainTimeOptions);
+            }
+            
             const mainDateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: state.settings.timeZone1, calendar: state.settings.yearFormat };
-            elements.time.textContent = now.toLocaleTimeString('en-US', mainTimeOptions);
             elements.date.textContent = now.toLocaleDateString('th-TH', mainDateOptions);
             
             const secondaryTimeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: state.settings.timeZone2 };
@@ -293,10 +394,8 @@
             elements.bgVideo.pause();
             elements.mainBackground.style.opacity = '0';
             elements.bgVideo.style.opacity = '0';
-
             const mode = state.settings.backgroundMode;
             const type = state.settings.backgroundType;
-
             if (mode === 'random') {
                 const updateRandomImage = () => {
                     const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
@@ -323,30 +422,31 @@
             elements.mainBackground.style.opacity = '0';
             elements.bgVideo.style.opacity = '0';
         };
-        
+
         const getWeatherDescription = (code) => {
-            const descriptions = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 61: "ฝนตกเล็กน้อย", 95: "พายุฝนฟ้าคะนอง"};
-            return descriptions[code] || "ไม่ทราบสภาพอากาศ";
+            const d = {0: "ท้องฟ้าแจ่มใส", 1: "ส่วนใหญ่แจ่มใส", 2: "มีเมฆบางส่วน", 3: "มีเมฆมาก", 45: "มีหมอก", 61: "ฝนตกเล็กน้อย", 95: "พายุฝนฟ้าคะนอง"};
+            return d[code] || "ไม่ทราบสภาพอากาศ";
         };
+
         const fetchWeather = () => {
             elements.weatherWidget.innerHTML = `<p>กำลังโหลด...</p>`;
-            navigator.geolocation.getCurrentPosition(async position => {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&current_weather=true`;
+            navigator.geolocation.getCurrentPosition(async p => {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`;
                 try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    elements.weatherWidget.innerHTML = `<p class="text-5xl font-bold">${Math.round(data.current_weather.temperature)}°C</p><p class="mt-2">${getWeatherDescription(data.current_weather.weathercode)}</p>`;
-                } catch (error) {
+                    const r = await fetch(url);
+                    const d = await r.json();
+                    elements.weatherWidget.innerHTML = `<p class="text-5xl font-bold">${Math.round(d.current_weather.temperature)}°C</p><p class="mt-2">${getWeatherDescription(d.current_weather.weathercode)}</p>`;
+                } catch (e) {
                     elements.weatherWidget.innerHTML = `<p>โหลดข้อมูลไม่ได้</p>`;
                 }
             }, () => {
                 elements.weatherWidget.innerHTML = `<p>โปรดเปิดตำแหน่ง</p>`;
             });
         };
+
         const updateWidgetVisibility = () => {
             elements.weatherWidget.style.display = state.settings.showWeather ? 'block' : 'none';
             if (state.settings.showWeather) fetchWeather();
-
             if (state.settings.showPhotos) {
                 updateBackgroundMedia();
             } else {
@@ -354,7 +454,6 @@
             }
         };
 
-        // --- Main State Handler ---
         const handleStateChange = () => {
             const isLandscape = screen.orientation.type.includes('landscape');
             if (isLandscape && state.isCharging) {
@@ -376,7 +475,7 @@
                 updatePortraitMessage();
             }
         };
-        
+
         const updatePortraitMessage = () => {
             if (state.isCharging) {
                 elements.portraitIcon.innerHTML = icons.landscape;
@@ -389,7 +488,6 @@
             }
         };
 
-        // --- Populate Timezone Select ---
         const populateTimezones = () => {
             const timezones = Object.keys(timezoneToCountryCode);
             [elements.timezoneSelect1, elements.timezoneSelect2].forEach(select => {
@@ -403,7 +501,6 @@
             });
         };
 
-        // --- Event Listeners Setup ---
         const setupEventListeners = () => {
             elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.replace('hidden-view', 'visible-view'));
             elements.closeSettingsBtn.addEventListener('click', () => {
@@ -411,7 +508,6 @@
                 saveSettings();
                 handleStateChange();
             });
-            
             const startPress = (e) => {
                 e.preventDefault();
                 state.longPressTimer = setTimeout(() => {
@@ -420,12 +516,11 @@
                 }, 500);
             };
             const cancelPress = () => clearTimeout(state.longPressTimer);
-            elements.clockContainer.addEventListener('mousedown', startPress);
-            elements.clockContainer.addEventListener('touchstart', startPress, { passive: false });
-            elements.clockContainer.addEventListener('mouseup', cancelPress);
-            elements.clockContainer.addEventListener('mouseleave', cancelPress);
-            elements.clockContainer.addEventListener('touchend', cancelPress);
-
+            elements.clockWrapper.addEventListener('mousedown', startPress);
+            elements.clockWrapper.addEventListener('touchstart', startPress, { passive: false });
+            elements.clockWrapper.addEventListener('mouseup', cancelPress);
+            elements.clockWrapper.addEventListener('mouseleave', cancelPress);
+            elements.clockWrapper.addEventListener('touchend', cancelPress);
             elements.liveOpacitySlider.addEventListener('input', e => {
                 state.settings.clockOpacity = e.target.value;
                 applyClockOpacity();
@@ -436,16 +531,22 @@
                     saveSettings();
                 }
             });
-            
             elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
             elements.photoToggle.addEventListener('change', e => {
                 state.settings.showPhotos = e.target.checked;
                 toggleBackgroundOptions();
             });
+            elements.clockTypeSelect.addEventListener('change', e => {
+                state.settings.clockType = e.target.value;
+                toggleClockTypeView();
+            });
             elements.timezoneSelect1.addEventListener('change', e => state.settings.timeZone1 = e.target.value);
             elements.timezoneSelect2.addEventListener('change', e => state.settings.timeZone2 = e.target.value);
             elements.yearFormatSelect.addEventListener('change', e => state.settings.yearFormat = e.target.value);
-            elements.bgModeSelect.addEventListener('change', e => { state.settings.backgroundMode = e.target.value; applyBackgroundMode(); });
+            elements.bgModeSelect.addEventListener('change', e => {
+                state.settings.backgroundMode = e.target.value;
+                applyBackgroundMode();
+            });
             elements.bgFileInput.addEventListener('change', e => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -455,7 +556,7 @@
                         state.settings.customBgUrl = event.target.result;
                         state.settings.backgroundType = 'image';
                         elements.customBgFilename.textContent = file.name;
-                        saveSettings(); 
+                        saveSettings();
                     };
                     reader.readAsDataURL(file);
                 } else if (file.type.startsWith('video/')) {
@@ -466,15 +567,25 @@
                     saveSettings();
                 }
             });
-            elements.bgColorInput.addEventListener('input', e => state.settings.backgroundColor = e.target.value, true);
-            elements.primaryColorInput.addEventListener('input', e => state.settings.primaryColor = e.target.value, true);
-            elements.secondaryColorInput.addEventListener('input', e => state.settings.secondaryColor = e.target.value, true);
-            elements.fontFamilySelect.addEventListener('change', e => state.settings.fontFamily = e.target.value);
-            
+            elements.bgColorInput.addEventListener('input', e => {
+                state.settings.backgroundColor = e.target.value;
+                applyColorAndFontSettings();
+            });
+            elements.primaryColorInput.addEventListener('input', e => {
+                state.settings.primaryColor = e.target.value;
+                applyColorAndFontSettings();
+            });
+            elements.secondaryColorInput.addEventListener('input', e => {
+                state.settings.secondaryColor = e.target.value;
+                applyColorAndFontSettings();
+            });
+            elements.fontFamilySelect.addEventListener('change', e => {
+                state.settings.fontFamily = e.target.value;
+                applyColorAndFontSettings();
+            });
             screen.orientation.addEventListener('change', handleStateChange);
         };
 
-        // --- Initialisation ---
         const setupBatteryListener = () => {
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
