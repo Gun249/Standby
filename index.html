@@ -80,7 +80,7 @@
                         <canvas id="analog-clock-canvas"></canvas>
                     </div>
                     <div class="text-center mt-2 flex-shrink-0">
-                        <div id="alarm-display" class="font-semibold mb-1" style="font-size: clamp(0.9rem, min(4vw, 6vh), 2rem);"></div>
+                        <div id="alarm-display" class="font-semibold mb-1 cursor-pointer" style="font-size: clamp(0.9rem, min(4vw, 6vh), 2rem);"></div>
                         <div id="date" class="font-bold" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
                         <div id="secondary-clock" class="font-semibold mt-1" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
                     </div>
@@ -96,8 +96,21 @@
             <input type="range" id="live-opacity-slider" min="0.2" max="1" step="0.05" class="w-full max-w-md h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer">
         </div>
         
+        <!-- Alarm Set Modal -->
+        <div id="alarm-set-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-40">
+             <div class="bg-gray-900 rounded-2xl p-8 w-full max-w-sm text-center">
+                <h2 class="text-2xl font-bold mb-6">ตั้งนาฬิกาปลุก</h2>
+                <input type="time" id="alarm-time-input" class="bg-gray-700 border-gray-600 rounded-md shadow-sm text-white w-full p-4 text-3xl text-center mb-6">
+                <div class="flex gap-4">
+                    <button id="set-alarm-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition">ตั้งปลุก</button>
+                    <button id="cancel-alarm-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition">ยกเลิก</button>
+                </div>
+                 <button id="disable-alarm-btn" class="w-full mt-4 bg-gray-800 hover:bg-gray-700 text-red-400 font-bold py-2 px-4 rounded-lg transition">ปิดการปลุก</button>
+            </div>
+        </div>
+
         <!-- Alarm Ringing Modal -->
-        <div id="alarm-ringing-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-40">
+        <div id="alarm-ringing-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
              <div class="bg-gray-900 rounded-2xl p-8 w-full max-w-sm text-center">
                 <h2 class="text-3xl font-bold mb-4 alarm-pulse">Alarm!</h2>
                 <p class="text-lg mb-6">ถึงเวลาปลุกแล้ว</p>
@@ -110,20 +123,6 @@
             <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md max-h-full overflow-y-auto">
                 <h2 class="text-xl font-bold mb-6">ตั้งค่าการแสดงผล</h2>
                 <div class="space-y-6">
-                    <!-- Alarm Settings -->
-                    <div>
-                        <h3 class="font-bold mb-2">นาฬิกาปลุก</h3>
-                        <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-300">เปิดใช้งาน</span>
-                                <input type="checkbox" id="alarm-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500">
-                            </label>
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-300">ตั้งเวลา</span>
-                                <input type="time" id="alarm-time-input" class="bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                            </label>
-                        </div>
-                    </div>
                     <!-- Clock Settings -->
                     <div>
                         <h3 class="font-bold mb-2">นาฬิกา</h3>
@@ -141,16 +140,22 @@
                             <label class="flex items-center justify-between"><span class="text-gray-300">พยากรณ์อากาศ</span><input type="checkbox" id="weather-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
                             <hr class="border-gray-700">
                             <label class="flex items-center justify-between"><span class="text-gray-300">แสดงภาพพื้นหลัง</span><input type="checkbox" id="photo-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500"></label>
-                            <div id="background-options-container" class="hidden space-y-2 pt-2">
+                            <div id="background-options-container" class="hidden space-y-4 pt-2">
                                 <select id="bg-mode-select" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
                                     <option value="random">สุ่มภาพอัตโนมัติ</option>
                                     <option value="custom">อัปโหลดไฟล์เอง</option>
                                 </select>
                                 <div id="custom-bg-upload-container" class="hidden">
-                                    <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพหรือวิดีโอ</label>
-                                    <input id="bg-file-input" type="file" accept="image/*,video/*">
+                                    <label for="bg-file-input" class="custom-file-upload w-full">เลือกไฟล์ภาพ (หลายไฟล์ได้)</label>
+                                    <input id="bg-file-input" type="file" accept="image/*" multiple>
                                     <p id="custom-bg-filename" class="text-xs text-gray-400 mt-2 truncate"></p>
                                 </div>
+                                <label class="block"><span class="text-gray-300">ระยะเวลาเปลี่ยนภาพ</span><select id="slideshow-interval-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
+                                    <option value="10000">10 วินาที</option>
+                                    <option value="20000">20 วินาที</option>
+                                    <option value="30000">30 วินาที</option>
+                                    <option value="60000">60 วินาที</option>
+                                </select></label>
                             </div>
                         </div>
                     </div>
@@ -195,6 +200,10 @@
             closeSettingsBtn: document.getElementById('close-settings-btn'),
             opacityModal: document.getElementById('opacity-modal'),
             liveOpacitySlider: document.getElementById('live-opacity-slider'),
+            alarmSetModal: document.getElementById('alarm-set-modal'),
+            setAlarmBtn: document.getElementById('set-alarm-btn'),
+            cancelAlarmBtn: document.getElementById('cancel-alarm-btn'),
+            disableAlarmBtn: document.getElementById('disable-alarm-btn'),
             alarmRingingModal: document.getElementById('alarm-ringing-modal'),
             dismissAlarmBtn: document.getElementById('dismiss-alarm-btn'),
             weatherToggle: document.getElementById('weather-toggle'),
@@ -202,7 +211,6 @@
             weatherWidget: document.getElementById('weather-widget'),
             backgroundOptionsContainer: document.getElementById('background-options-container'),
             backgroundColorContainer: document.getElementById('background-color-container'),
-            alarmToggle: document.getElementById('alarm-toggle'),
             alarmTimeInput: document.getElementById('alarm-time-input'),
             clockTypeSelect: document.getElementById('clock-type-select'),
             timezoneSelect1: document.getElementById('timezone-select-1'),
@@ -212,6 +220,7 @@
             customBgUploadContainer: document.getElementById('custom-bg-upload-container'),
             bgFileInput: document.getElementById('bg-file-input'),
             customBgFilename: document.getElementById('custom-bg-filename'),
+            slideshowIntervalSelect: document.getElementById('slideshow-interval-select'),
             bgColorInput: document.getElementById('bg-color-input'),
             primaryColorInput: document.getElementById('primary-color-input'),
             secondaryColorInput: document.getElementById('secondary-color-input'),
@@ -227,6 +236,7 @@
             longPressTimer: null,
             alarmSound: null,
             hasAlarmTriggered: false,
+            currentSlideIndex: 0,
             settings: {
                 showWeather: false,
                 showPhotos: false,
@@ -238,8 +248,8 @@
                 yearFormat: 'buddhist',
                 clockOpacity: 1.0,
                 backgroundMode: 'random',
-                backgroundType: 'random',
-                customBgUrl: null,
+                slideshowInterval: 20000,
+                customBgUrls: [],
                 backgroundColor: '#000000',
                 primaryColor: '#ef4444',
                 secondaryColor: '#ffffff',
@@ -258,23 +268,26 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v11', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v12', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v11');
+            const saved = localStorage.getItem('standbySettings_v12');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
+                 if (!Array.isArray(state.settings.customBgUrls)) {
+                    state.settings.customBgUrls = [];
+                }
             }
             elements.weatherToggle.checked = state.settings.showWeather;
             elements.photoToggle.checked = state.settings.showPhotos;
-            elements.alarmToggle.checked = state.settings.isAlarmSet;
             elements.alarmTimeInput.value = state.settings.alarmTime;
             elements.clockTypeSelect.value = state.settings.clockType;
             elements.timezoneSelect1.value = state.settings.timeZone1;
             elements.timezoneSelect2.value = state.settings.timeZone2;
             elements.yearFormatSelect.value = state.settings.yearFormat;
             elements.bgModeSelect.value = state.settings.backgroundMode;
-            elements.customBgFilename.textContent = state.settings.customBgUrl ? "มีไฟล์ที่อัปโหลดไว้แล้ว" : "";
+            elements.slideshowIntervalSelect.value = state.settings.slideshowInterval;
+            elements.customBgFilename.textContent = state.settings.customBgUrls.length > 0 ? `${state.settings.customBgUrls.length} ไฟล์` : "";
             elements.bgColorInput.value = state.settings.backgroundColor;
             elements.primaryColorInput.value = state.settings.primaryColor;
             elements.secondaryColorInput.value = state.settings.secondaryColor;
@@ -349,7 +362,6 @@
             const radius = size / 2;
             ctx.translate(radius, radius);
 
-            // Draw numbers
             ctx.font = `bold ${radius * 0.15}px ${state.settings.fontFamily}`;
             ctx.fillStyle = state.settings.secondaryColor;
             ctx.textBaseline = "middle";
@@ -365,7 +377,6 @@
                 ctx.rotate(-ang);
             }
 
-            // Draw hands
             const hour = now.getHours() % 12;
             const minute = now.getMinutes();
             const second = now.getSeconds();
@@ -377,7 +388,6 @@
             let secondAngle = (second*Math.PI/30);
             drawHand(ctx, secondAngle, radius*0.85, radius*0.02, state.settings.primaryColor);
 
-            // Draw center
             ctx.beginPath();
             ctx.arc(0, 0, radius * 0.05, 0, 2 * Math.PI);
             ctx.fillStyle = state.settings.primaryColor;
@@ -420,10 +430,10 @@
             elements.secondaryClock.innerHTML = `<span>${flag}</span> ${secondaryTimeString}`;
 
             if (state.settings.isAlarmSet) {
-                elements.alarmDisplay.textContent = `⏰ ${state.settings.alarmTime}`;
+                elements.alarmDisplay.innerHTML = `<span>⏰</span> ${state.settings.alarmTime}`;
                 checkAlarm(now, primaryNow);
             } else {
-                elements.alarmDisplay.textContent = '';
+                elements.alarmDisplay.innerHTML = `<span>⏰</span> --:--`;
             }
         };
 
@@ -462,18 +472,14 @@
             }
             elements.alarmRingingModal.classList.replace('visible-view', 'hidden-view');
             state.settings.isAlarmSet = false;
-            elements.alarmToggle.checked = false;
-            // Reset trigger for next day
             setTimeout(() => { state.hasAlarmTriggered = false; }, 60000); 
         };
 
         const updateBackgroundMedia = () => {
             if (state.photoInterval) clearInterval(state.photoInterval);
-            elements.bgVideo.pause();
-            elements.mainBackground.style.opacity = '0';
-            elements.bgVideo.style.opacity = '0';
+            
             const mode = state.settings.backgroundMode;
-            const type = state.settings.backgroundType;
+            
             if (mode === 'random') {
                 const updateRandomImage = () => {
                     const query = ['nature', 'water', 'sky', 'city', 'abstract', 'technology'][Math.floor(Math.random() * 6)];
@@ -481,16 +487,15 @@
                     elements.mainBackground.style.opacity = '1';
                 };
                 updateRandomImage();
-                state.photoInterval = setInterval(updateRandomImage, 20000);
-            } else if (mode === 'custom' && state.settings.customBgUrl) {
-                if (type === 'image') {
-                    elements.mainBackground.style.backgroundImage = `url(${state.settings.customBgUrl})`;
+                state.photoInterval = setInterval(updateRandomImage, state.settings.slideshowInterval);
+            } else if (mode === 'custom' && state.settings.customBgUrls.length > 0) {
+                 const showNextSlide = () => {
+                    state.currentSlideIndex = (state.currentSlideIndex + 1) % state.settings.customBgUrls.length;
+                    elements.mainBackground.style.backgroundImage = `url(${state.settings.customBgUrls[state.currentSlideIndex]})`;
                     elements.mainBackground.style.opacity = '1';
-                } else if (type === 'video') {
-                    elements.bgVideo.src = state.settings.customBgUrl;
-                    elements.bgVideo.play();
-                    elements.bgVideo.style.opacity = '1';
-                }
+                };
+                showNextSlide();
+                state.photoInterval = setInterval(showNextSlide, state.settings.slideshowInterval);
             }
         };
 
@@ -546,7 +551,7 @@
                 setTimeout(() => {
                     updateClock();
                     state.clockInterval = setInterval(updateClock, 1000);
-                }, 0);
+                }, 100);
 
                 updateWidgetVisibility();
                 applyClockOpacity();
@@ -592,7 +597,6 @@
 
         const setupFontSelector = async () => {
             const select = elements.fontFamilySelect;
-            // Add web fonts first
             const webOptGroup = document.createElement('optgroup');
             webOptGroup.label = 'Web Fonts';
             webOptGroup.innerHTML = `
@@ -602,7 +606,6 @@
             `;
             select.appendChild(webOptGroup);
 
-            // Query local fonts
             if ('queryLocalFonts' in window) {
                 try {
                     const availableFonts = await window.queryLocalFonts();
@@ -657,19 +660,32 @@
                     saveSettings();
                 }
             });
+            elements.alarmDisplay.addEventListener('click', () => {
+                elements.alarmSetModal.classList.replace('hidden-view', 'visible-view');
+            });
+            elements.setAlarmBtn.addEventListener('click', () => {
+                state.settings.isAlarmSet = true;
+                state.settings.alarmTime = elements.alarmTimeInput.value;
+                state.hasAlarmTriggered = false;
+                saveSettings();
+                elements.alarmSetModal.classList.replace('visible-view', 'hidden-view');
+            });
+            elements.cancelAlarmBtn.addEventListener('click', () => {
+                elements.alarmSetModal.classList.replace('visible-view', 'hidden-view');
+            });
+            elements.disableAlarmBtn.addEventListener('click', () => {
+                state.settings.isAlarmSet = false;
+                state.hasAlarmTriggered = false;
+                saveSettings();
+                elements.alarmSetModal.classList.replace('visible-view', 'hidden-view');
+            });
+
+            elements.dismissAlarmBtn.addEventListener('click', dismissAlarm);
             elements.weatherToggle.addEventListener('change', e => state.settings.showWeather = e.target.checked);
             elements.photoToggle.addEventListener('change', e => {
                 state.settings.showPhotos = e.target.checked;
                 toggleBackgroundOptions();
             });
-            elements.alarmToggle.addEventListener('change', e => {
-                state.settings.isAlarmSet = e.target.checked;
-                if (!state.settings.isAlarmSet) {
-                    state.hasAlarmTriggered = false; // Reset trigger if user turns it off
-                }
-            });
-            elements.alarmTimeInput.addEventListener('change', e => state.settings.alarmTime = e.target.value);
-            elements.dismissAlarmBtn.addEventListener('click', dismissAlarm);
             elements.clockTypeSelect.addEventListener('change', e => {
                 state.settings.clockType = e.target.value;
                 toggleClockTypeView();
@@ -681,25 +697,33 @@
                 state.settings.backgroundMode = e.target.value;
                 applyBackgroundMode();
             });
+            elements.slideshowIntervalSelect.addEventListener('change', e => {
+                state.settings.slideshowInterval = parseInt(e.target.value, 10);
+            });
             elements.bgFileInput.addEventListener('change', e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        state.settings.customBgUrl = event.target.result;
-                        state.settings.backgroundType = 'image';
-                        elements.customBgFilename.textContent = file.name;
-                        saveSettings();
-                    };
-                    reader.readAsDataURL(file);
-                } else if (file.type.startsWith('video/')) {
-                    const url = URL.createObjectURL(file);
-                    state.settings.customBgUrl = url;
-                    state.settings.backgroundType = 'video';
-                    elements.customBgFilename.textContent = file.name;
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                
+                state.settings.customBgUrls = [];
+                const promises = Array.from(files).map(file => {
+                    return new Promise((resolve, reject) => {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => resolve(event.target.result);
+                            reader.onerror = (error) => reject(error);
+                            reader.readAsDataURL(file);
+                        } else {
+                            resolve(null); // Ignore non-image files for now
+                        }
+                    });
+                });
+
+                Promise.all(promises).then(urls => {
+                    state.settings.customBgUrls = urls.filter(url => url !== null);
+                    elements.customBgFilename.textContent = `${state.settings.customBgUrls.length} ไฟล์ถูกเลือก`;
+                    state.currentSlideIndex = -1; // Reset index
                     saveSettings();
-                }
+                });
             });
             elements.bgColorInput.addEventListener('input', e => {
                 state.settings.backgroundColor = e.target.value;
@@ -740,10 +764,10 @@
                     
                     battery.addEventListener('chargingchange', updateBatteryStatus);
                     battery.addEventListener('levelchange', updateBatteryStatus);
-                    updateBatteryStatus(); // Initial check
+                    updateBatteryStatus();
                 });
             } else {
-                state.isCharging = true; // Fallback for unsupported browsers
+                state.isCharging = true;
                 handleStateChange();
             }
         };
