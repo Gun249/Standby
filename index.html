@@ -57,7 +57,7 @@
             <h1 id="portrait-title" class="text-2xl font-bold mb-2">โหมด StandBy</h1>
             <p id="portrait-text" class="text-gray-400">กรุณาหมุนอุปกรณ์เป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ</p>
             <button id="settings-btn" class="absolute top-5 right-5 p-2 text-gray-400 hover:text-white transition">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495-.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
             </button>
         </div>
 
@@ -67,14 +67,14 @@
             <video id="bg-video" class="background-media" muted loop playsinline></video>
             
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-                <div id="clock-wrapper" class="flex items-center justify-center transition-opacity duration-300 cursor-pointer">
-                    <div class="text-center w-full h-full flex flex-col items-center justify-center">
-                        <div id="clock-face-container" class="relative w-full flex-grow flex items-center justify-center">
-                            <div id="digital-time" class="font-black" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
-                            <canvas id="analog-clock-canvas" class="hidden absolute top-0 left-0"></canvas>
-                        </div>
-                        <div id="date" class="font-bold mt-2" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
-                        <div id="secondary-clock" class="font-semibold mt-3" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
+                <div id="clock-wrapper" class="flex flex-col items-center justify-center transition-opacity duration-300 cursor-pointer">
+                    <div id="clock-face-container" class="relative w-full flex-grow flex items-center justify-center">
+                        <div id="digital-time" class="font-black text-center" style="font-size: clamp(3rem, min(22vw, 35vh), 12rem); line-height: 1;">00:00:00</div>
+                        <canvas id="analog-clock-canvas" class="hidden"></canvas>
+                    </div>
+                    <div class="text-center mt-2 flex-shrink-0">
+                        <div id="date" class="font-bold" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
+                        <div id="secondary-clock" class="font-semibold mt-1" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
                     </div>
                 </div>
                 <div class="flex items-center justify-center">
@@ -219,10 +219,10 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v8', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v9', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v8');
+            const saved = localStorage.getItem('standbySettings_v9');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
@@ -298,7 +298,9 @@
             const ctx = canvas.getContext('2d');
             const container = canvas.parentElement;
             
-            const size = Math.min(container.offsetWidth, container.offsetHeight) * 0.9;
+            const size = Math.min(container.clientWidth, container.clientHeight) * 0.9;
+            if (size <= 0) return; // Don't draw if container is not ready
+
             canvas.width = size;
             canvas.height = size;
             
@@ -310,16 +312,7 @@
             ctx.arc(0, 0, radius * 0.95, 0, 2 * Math.PI);
             ctx.fillStyle = 'transparent';
             ctx.fill();
-            ctx.strokeStyle = state.settings.secondaryColor;
-            ctx.lineWidth = radius * 0.05;
-            ctx.stroke();
             
-            // Draw center
-            ctx.beginPath();
-            ctx.arc(0, 0, radius * 0.05, 0, 2 * Math.PI);
-            ctx.fillStyle = state.settings.primaryColor;
-            ctx.fill();
-
             // Draw numbers
             ctx.font = `bold ${radius * 0.15}px ${state.settings.fontFamily}`;
             ctx.fillStyle = state.settings.secondaryColor;
@@ -351,6 +344,12 @@
             let secondAngle = (second*Math.PI/30);
             drawHand(ctx, secondAngle, radius*0.85, radius*0.02, state.settings.primaryColor);
 
+            // Draw center
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.05, 0, 2 * Math.PI);
+            ctx.fillStyle = state.settings.primaryColor;
+            ctx.fill();
+
             ctx.translate(-radius, -radius); // Reset translation
         }
 
@@ -368,7 +367,6 @@
 
         const updateClock = () => {
             const now = new Date();
-            // Get time for the primary timezone
             const primaryNowStr = now.toLocaleString('en-US', { timeZone: state.settings.timeZone1 });
             const primaryNow = new Date(primaryNowStr);
 
@@ -584,6 +582,7 @@
                 applyColorAndFontSettings();
             });
             screen.orientation.addEventListener('change', handleStateChange);
+            window.addEventListener('resize', handleStateChange); // Re-draw on resize
         };
 
         const setupBatteryListener = () => {
