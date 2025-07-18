@@ -480,7 +480,9 @@
         };
 
         const ringAlarm = async () => {
-            await Tone.start();
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
             state.alarmSound = new Tone.Synth().toDestination();
             Tone.Transport.scheduleRepeat(time => {
                 state.alarmSound.triggerAttackRelease("C5", "8n", time);
@@ -499,8 +501,9 @@
                 state.alarmSound = null;
             }
             elements.alarmRingingModal.classList.replace('visible-view', 'hidden-view');
-            state.settings.isAlarmSet = false;
-            setTimeout(() => { state.hasAlarmTriggered = false; }, 60000); 
+            // Don't disable the alarm, just stop it for today.
+            // It will be ready for the next day automatically.
+            setTimeout(() => { state.hasAlarmTriggered = false; }, 60000); // Reset after 1 minute
         };
 
         const updateBackgroundMedia = () => {
@@ -792,7 +795,11 @@
             screen.orientation.addEventListener('change', handleStateChange);
             window.addEventListener('resize', handleStateChange);
             
-            elements.fullscreenBtn.addEventListener('click', () => {
+            elements.fullscreenBtn.addEventListener('click', async () => {
+                if (Tone.context.state !== 'running') {
+                    await Tone.start();
+                    console.log('Audio context started by fullscreen button.');
+                }
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen().catch(err => {
                         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
