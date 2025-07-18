@@ -6,6 +6,7 @@
     <title>StandBy Mode PWA</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lora:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -44,6 +45,9 @@
         /* Opacity Slider Thumb */
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
         input[type=range]::-moz-range-thumb { width: 24px; height: 24px; background: #ef4444; cursor: pointer; border-radius: 50%; }
+        /* Alarm animation */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .alarm-pulse { animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
 <body class="bg-black text-white h-screen w-screen flex items-center justify-center select-none">
@@ -76,6 +80,7 @@
                         <canvas id="analog-clock-canvas"></canvas>
                     </div>
                     <div class="text-center mt-2 flex-shrink-0">
+                        <div id="alarm-display" class="font-semibold mb-1" style="font-size: clamp(0.9rem, min(4vw, 6vh), 2rem);"></div>
                         <div id="date" class="font-bold" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);">วันที่</div>
                         <div id="secondary-clock" class="font-semibold mt-1" style="font-size: clamp(1rem, min(5vw, 7vh), 2.5rem);"></div>
                     </div>
@@ -90,12 +95,35 @@
         <div id="opacity-modal" class="modal hidden-view absolute inset-0 bg-black/50 flex items-center justify-center p-8 z-30">
             <input type="range" id="live-opacity-slider" min="0.2" max="1" step="0.05" class="w-full max-w-md h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer">
         </div>
+        
+        <!-- Alarm Ringing Modal -->
+        <div id="alarm-ringing-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-40">
+             <div class="bg-gray-900 rounded-2xl p-8 w-full max-w-sm text-center">
+                <h2 class="text-3xl font-bold mb-4 alarm-pulse">Alarm!</h2>
+                <p class="text-lg mb-6">ถึงเวลาปลุกแล้ว</p>
+                <button id="dismiss-alarm-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition">ปิดเสียง</button>
+            </div>
+        </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal hidden-view absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-30">
             <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md max-h-full overflow-y-auto">
                 <h2 class="text-xl font-bold mb-6">ตั้งค่าการแสดงผล</h2>
                 <div class="space-y-6">
+                    <!-- Alarm Settings -->
+                    <div>
+                        <h3 class="font-bold mb-2">นาฬิกาปลุก</h3>
+                        <div class="space-y-4 p-4 bg-gray-800 rounded-lg">
+                            <label class="flex items-center justify-between">
+                                <span class="text-gray-300">เปิดใช้งาน</span>
+                                <input type="checkbox" id="alarm-toggle" class="h-6 w-6 rounded text-red-500 focus:ring-red-500">
+                            </label>
+                            <label class="flex items-center justify-between">
+                                <span class="text-gray-300">ตั้งเวลา</span>
+                                <input type="time" id="alarm-time-input" class="bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                            </label>
+                        </div>
+                    </div>
                     <!-- Clock Settings -->
                     <div>
                         <h3 class="font-bold mb-2">นาฬิกา</h3>
@@ -135,11 +163,7 @@
                             </div>
                             <label class="flex items-center justify-between"><span class="text-gray-300">สีนาฬิกาหลัก/เข็ม</span><input type="color" id="primary-color-input"></label>
                             <label class="flex items-center justify-between"><span class="text-gray-300">สีข้อความรอง</span><input type="color" id="secondary-color-input"></label>
-                             <label class="block"><span class="text-gray-300">รูปแบบฟอนต์</span><select id="font-family-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500">
-                                <option value="'Inter', sans-serif">Inter (มาตรฐาน)</option>
-                                <option value="'Lora', serif">Lora (มีหัว)</option>
-                                <option value="'Roboto Mono', monospace">Roboto Mono (ดิจิทัล)</option>
-                            </select></label>
+                             <label class="block"><span class="text-gray-300">รูปแบบฟอนต์</span><select id="font-family-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"></select></label>
                         </div>
                     </div>
                 </div>
@@ -159,6 +183,7 @@
             analogClockCanvas: document.getElementById('analog-clock-canvas'),
             date: document.getElementById('date'),
             secondaryClock: document.getElementById('secondary-clock'),
+            alarmDisplay: document.getElementById('alarm-display'),
             portraitView: document.getElementById('portrait-view'),
             standbyView: document.getElementById('standby-view'),
             portraitIcon: document.getElementById('portrait-icon'),
@@ -170,11 +195,15 @@
             closeSettingsBtn: document.getElementById('close-settings-btn'),
             opacityModal: document.getElementById('opacity-modal'),
             liveOpacitySlider: document.getElementById('live-opacity-slider'),
+            alarmRingingModal: document.getElementById('alarm-ringing-modal'),
+            dismissAlarmBtn: document.getElementById('dismiss-alarm-btn'),
             weatherToggle: document.getElementById('weather-toggle'),
             photoToggle: document.getElementById('photo-toggle'),
             weatherWidget: document.getElementById('weather-widget'),
             backgroundOptionsContainer: document.getElementById('background-options-container'),
             backgroundColorContainer: document.getElementById('background-color-container'),
+            alarmToggle: document.getElementById('alarm-toggle'),
+            alarmTimeInput: document.getElementById('alarm-time-input'),
             clockTypeSelect: document.getElementById('clock-type-select'),
             timezoneSelect1: document.getElementById('timezone-select-1'),
             timezoneSelect2: document.getElementById('timezone-select-2'),
@@ -196,9 +225,13 @@
             isCharging: false,
             isLowBattery: false,
             longPressTimer: null,
+            alarmSound: null,
+            hasAlarmTriggered: false,
             settings: {
                 showWeather: false,
                 showPhotos: false,
+                isAlarmSet: false,
+                alarmTime: "07:00",
                 clockType: 'digital',
                 timeZone1: 'Asia/Bangkok',
                 timeZone2: 'Europe/London',
@@ -225,15 +258,17 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v10', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v11', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v10');
+            const saved = localStorage.getItem('standbySettings_v11');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
             elements.weatherToggle.checked = state.settings.showWeather;
             elements.photoToggle.checked = state.settings.showPhotos;
+            elements.alarmToggle.checked = state.settings.isAlarmSet;
+            elements.alarmTimeInput.value = state.settings.alarmTime;
             elements.clockTypeSelect.value = state.settings.clockType;
             elements.timezoneSelect1.value = state.settings.timeZone1;
             elements.timezoneSelect2.value = state.settings.timeZone2;
@@ -259,6 +294,7 @@
             elements.digitalTime.style.color = state.settings.primaryColor;
             elements.date.style.color = state.settings.secondaryColor;
             elements.secondaryClock.style.color = state.settings.secondaryColor;
+            elements.alarmDisplay.style.color = state.settings.secondaryColor;
             elements.app.style.fontFamily = state.settings.fontFamily;
         };
 
@@ -382,6 +418,53 @@
             const countryCode = timezoneToCountryCode[state.settings.timeZone2];
             const flag = getFlagEmoji(countryCode);
             elements.secondaryClock.innerHTML = `<span>${flag}</span> ${secondaryTimeString}`;
+
+            if (state.settings.isAlarmSet) {
+                elements.alarmDisplay.textContent = `⏰ ${state.settings.alarmTime}`;
+                checkAlarm(now, primaryNow);
+            } else {
+                elements.alarmDisplay.textContent = '';
+            }
+        };
+
+        // --- Alarm ---
+        const checkAlarm = (now, primaryNow) => {
+            if (!state.settings.isAlarmSet || state.hasAlarmTriggered) return;
+            
+            const [alarmHour, alarmMinute] = state.settings.alarmTime.split(':').map(Number);
+            const currentHour = primaryNow.getHours();
+            const currentMinute = primaryNow.getMinutes();
+
+            if (currentHour === alarmHour && currentMinute === alarmMinute) {
+                ringAlarm();
+                state.hasAlarmTriggered = true;
+            }
+        };
+
+        const ringAlarm = async () => {
+            await Tone.start();
+            state.alarmSound = new Tone.Synth().toDestination();
+            Tone.Transport.scheduleRepeat(time => {
+                state.alarmSound.triggerAttackRelease("C5", "8n", time);
+            }, "4n");
+            Tone.Transport.start();
+            elements.alarmRingingModal.classList.replace('hidden-view', 'visible-view');
+        };
+
+        const dismissAlarm = () => {
+            if (Tone.Transport.state === 'started') {
+                Tone.Transport.stop();
+                Tone.Transport.cancel();
+            }
+            if(state.alarmSound) {
+                state.alarmSound.dispose();
+                state.alarmSound = null;
+            }
+            elements.alarmRingingModal.classList.replace('visible-view', 'hidden-view');
+            state.settings.isAlarmSet = false;
+            elements.alarmToggle.checked = false;
+            // Reset trigger for next day
+            setTimeout(() => { state.hasAlarmTriggered = false; }, 60000); 
         };
 
         const updateBackgroundMedia = () => {
@@ -507,6 +590,43 @@
             });
         };
 
+        const setupFontSelector = async () => {
+            const select = elements.fontFamilySelect;
+            // Add web fonts first
+            const webOptGroup = document.createElement('optgroup');
+            webOptGroup.label = 'Web Fonts';
+            webOptGroup.innerHTML = `
+                <option value="'Inter', sans-serif">Inter (มาตรฐาน)</option>
+                <option value="'Lora', serif">Lora (มีหัว)</option>
+                <option value="'Roboto Mono', monospace">Roboto Mono (ดิจิทัล)</option>
+            `;
+            select.appendChild(webOptGroup);
+
+            // Query local fonts
+            if ('queryLocalFonts' in window) {
+                try {
+                    const availableFonts = await window.queryLocalFonts();
+                    const localOptGroup = document.createElement('optgroup');
+                    localOptGroup.label = 'ฟอนต์ในเครื่อง';
+                    const fontSet = new Set();
+                    for (const fontData of availableFonts) {
+                        if (!fontSet.has(fontData.family)) {
+                            const option = document.createElement('option');
+                            option.value = `"${fontData.family}"`;
+                            option.textContent = fontData.family;
+                            localOptGroup.appendChild(option);
+                            fontSet.add(fontData.family);
+                        }
+                    }
+                    if (localOptGroup.childElementCount > 0) {
+                        select.appendChild(localOptGroup);
+                    }
+                } catch (err) {
+                    console.error('Font enumeration failed:', err);
+                }
+            }
+        };
+
         const setupEventListeners = () => {
             elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.replace('hidden-view', 'visible-view'));
             elements.closeSettingsBtn.addEventListener('click', () => {
@@ -542,6 +662,14 @@
                 state.settings.showPhotos = e.target.checked;
                 toggleBackgroundOptions();
             });
+            elements.alarmToggle.addEventListener('change', e => {
+                state.settings.isAlarmSet = e.target.checked;
+                if (!state.settings.isAlarmSet) {
+                    state.hasAlarmTriggered = false; // Reset trigger if user turns it off
+                }
+            });
+            elements.alarmTimeInput.addEventListener('change', e => state.settings.alarmTime = e.target.value);
+            elements.dismissAlarmBtn.addEventListener('click', dismissAlarm);
             elements.clockTypeSelect.addEventListener('change', e => {
                 state.settings.clockType = e.target.value;
                 toggleClockTypeView();
@@ -620,7 +748,8 @@
             }
         };
         
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+            await setupFontSelector();
             populateTimezones();
             loadSettings();
             applyClockOpacity();
