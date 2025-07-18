@@ -56,6 +56,9 @@
             <div id="portrait-icon"></div>
             <h1 id="portrait-title" class="text-2xl font-bold mb-2">โหมด StandBy</h1>
             <p id="portrait-text" class="text-gray-400">กรุณาหมุนอุปกรณ์เป็นแนวนอน<br>เพื่อเข้าสู่โหมดพักหน้าจอ</p>
+            <button id="fullscreen-btn" class="mt-8 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                เข้าสู่โหมดเต็มจอ
+            </button>
             <button id="settings-btn" class="absolute top-5 right-5 p-2 text-gray-400 hover:text-white transition">
                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.424.35.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.003-.827c.293-.24.438-.613.438-.995s-.145-.755-.438-.995l-1.003-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.075-.124.073-.044.146-.087.22-.127.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
             </button>
@@ -162,6 +165,7 @@
             portraitTitle: document.getElementById('portrait-title'),
             portraitText: document.getElementById('portrait-text'),
             settingsBtn: document.getElementById('settings-btn'),
+            fullscreenBtn: document.getElementById('fullscreen-btn'),
             settingsModal: document.getElementById('settings-modal'),
             closeSettingsBtn: document.getElementById('close-settings-btn'),
             opacityModal: document.getElementById('opacity-modal'),
@@ -190,11 +194,12 @@
             clockInterval: null,
             photoInterval: null,
             isCharging: false,
+            isLowBattery: false,
             longPressTimer: null,
             settings: {
                 showWeather: false,
                 showPhotos: false,
-                clockType: 'digital', // 'digital', 'analog'
+                clockType: 'digital',
                 timeZone1: 'Asia/Bangkok',
                 timeZone2: 'Europe/London',
                 yearFormat: 'buddhist',
@@ -211,7 +216,8 @@
 
         const icons = {
             landscape: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>`,
-            charging: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>`
+            charging: `<svg class="w-16 h-16 mb-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>`,
+            lowBattery: `<svg class="w-16 h-16 mb-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M4.5 10.5H18V15H4.5v-4.5ZM3.75 18h15A2.25 2.25 0 0 0 21 15.75v-6.375A2.25 2.25 0 0 0 18.75 7.125h-15A2.25 2.25 0 0 0 1.5 9.375v6.375A2.25 2.25 0 0 0 3.75 18Z" /></svg>`
         };
         
         const timezoneToCountryCode = {
@@ -219,10 +225,10 @@
         };
 
         // --- Settings Management ---
-        const saveSettings = () => localStorage.setItem('standbySettings_v9', JSON.stringify(state.settings));
+        const saveSettings = () => localStorage.setItem('standbySettings_v10', JSON.stringify(state.settings));
 
         const loadSettings = () => {
-            const saved = localStorage.getItem('standbySettings_v9');
+            const saved = localStorage.getItem('standbySettings_v10');
             if (saved) {
                 state.settings = { ...state.settings, ...JSON.parse(saved) };
             }
@@ -445,7 +451,9 @@
 
         const handleStateChange = () => {
             const isLandscape = screen.orientation.type.includes('landscape');
-            if (isLandscape && state.isCharging) {
+            const canEnterStandby = isLandscape && (state.isCharging || !state.isLowBattery);
+
+            if (canEnterStandby) {
                 elements.portraitView.classList.replace('visible-view', 'hidden-view');
                 elements.standbyView.classList.replace('hidden-view', 'visible-view');
                 requestWakeLock();
@@ -471,7 +479,11 @@
         };
 
         const updatePortraitMessage = () => {
-            if (state.isCharging) {
+            if (state.isLowBattery && !state.isCharging) {
+                elements.portraitIcon.innerHTML = icons.lowBattery;
+                elements.portraitTitle.textContent = "แบตเตอรี่ต่ำ";
+                elements.portraitText.innerHTML = "กรุณาเสียบสายชาร์จเพื่อใช้โหมด StandBy";
+            } else if (state.isCharging) {
                 elements.portraitIcon.innerHTML = icons.landscape;
                 elements.portraitTitle.textContent = "พร้อมทำงาน";
                 elements.portraitText.innerHTML = "กรุณาหมุนอุปกรณ์เป็นแนวนอน";
@@ -578,21 +590,32 @@
                 applyColorAndFontSettings();
             });
             screen.orientation.addEventListener('change', handleStateChange);
-            window.addEventListener('resize', handleStateChange); // Re-draw on resize
+            window.addEventListener('resize', handleStateChange);
+            
+            elements.fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    });
+                }
+            });
         };
 
         const setupBatteryListener = () => {
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
-                    state.isCharging = battery.charging;
-                    battery.addEventListener('chargingchange', () => {
+                    const updateBatteryStatus = () => {
                         state.isCharging = battery.charging;
+                        state.isLowBattery = battery.level <= 0.20;
                         handleStateChange();
-                    });
-                    handleStateChange();
+                    };
+                    
+                    battery.addEventListener('chargingchange', updateBatteryStatus);
+                    battery.addEventListener('levelchange', updateBatteryStatus);
+                    updateBatteryStatus(); // Initial check
                 });
             } else {
-                state.isCharging = true;
+                state.isCharging = true; // Fallback for unsupported browsers
                 handleStateChange();
             }
         };
