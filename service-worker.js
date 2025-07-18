@@ -4,8 +4,9 @@ const CACHE_NAME = 'standby-pwa-cache-v1';
 // List of files to cache.
 const urlsToCache = [
   '/',
-  'index.html' 
-  // We don't cache the script and manifest here as they are small and might change.
+  'index.html',
+  'manifest.json'
+  // We don't cache external scripts as they might change.
   // For a production app, you would cache all static assets.
 ];
 
@@ -35,6 +36,18 @@ self.addEventListener('fetch', event => {
     )
   );
 });
-window.addEventListener('load', () => {
-  handleOrientationChange(); // ตรวจสอบโหมดตอนโหลดหน้า
+
+// Activate event: clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
 });
